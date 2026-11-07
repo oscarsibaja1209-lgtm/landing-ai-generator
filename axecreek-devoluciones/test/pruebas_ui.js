@@ -175,6 +175,11 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.waitForFunction(() => /Notificadas sin confirmar/.test(document.querySelector('#gBandejas .chip.on').textContent));
   ok(/8\.658/.test(await page.textContent('#gBandejas .chip.on')), 'Bandeja de notificadas sin confirmar: 8.658');
 
+  await page.click('#nav-ingreso'); await page.selectOption('#iTrans', 'Coordinadora');
+  ok(await page.isVisible('#mlRemp'), 'Coordinadora sí muestra guías reemplazatorias');
+  await page.selectOption('#iTrans', 'TCC'); ok(await page.isVisible('#mlRemp'), 'TCC sí muestra guías reemplazatorias');
+  await page.selectOption('#iTrans', 'Interrapidísimo'); ok(await page.isVisible('#mlRemp') && await page.isVisible('#mlIdInter'), 'Interrapidísimo muestra reemplazatorias y sus campos propios');
+  await page.selectOption('#iTrans', 'Veloces'); ok(!(await page.isVisible('#mlRemp')) && !(await page.isVisible('#mlCuenta')), 'Veloces no muestra reemplazatorias ni campos de otras transportadoras');
   titulo('4. Correos a transportadora');
   await page.click('#nav-correos');
   await page.click('#mTipos >> text=Envío a Bodega Dropi');
@@ -279,6 +284,7 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   ok(await page.$eval('#iTrans', s => s.disabled && s.value === 'Envía'), 'Transportadora fija en Envía');
   await page.waitForSelector('#mlGuias');
   ok(await page.isVisible('#mlCuenta'), 'Formulario por líneas con campos de Envía (cuenta y fecha de captura)');
+  ok(!(await page.isVisible('#mlRemp')), 'Envía NO muestra guías reemplazatorias');
   await page.fill('#mlGuias', '014188880001\n014188880002\n014188880002\n014188880003');
   await page.fill('#mlTipo', 'DIRECCION ERRADA\nNO SE UBICA');
   await page.click('#tab-ingreso >> text=Revisar y registrar novedades');
@@ -300,7 +306,7 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   ok(g3 && g3[4] === 'SE NEGO' && g3[5] === 'DEV' && g3[8] === 'C3', 'Guía 4 conserva sus datos aunque la 3 era repetida (nada se corrió)');
   const XLSX = require(path.join(libs, 'node_modules/xlsx'));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['GUIA', 'GUIA REEMPLAZATORIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES', 'CUENTA', 'FECHA CAPTURA'], ['014199990001', '', 'DIRECCION ERRADA', 'DEVOLUCION', 'obs uno', 'C1', '01/11/2026'], ['', '', 'X', 'DEVOLUCION', 'sin guía', '', ''], [String(filas.find(r => r[1] === 'Envía')[2]), '', 'SE NEGO A RECIBIR', '', 'reingreso', '', '']]), 'Novedades');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['GUIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES', 'CUENTA', 'FECHA CAPTURA'], ['014199990001', 'DIRECCION ERRADA', 'DEVOLUCION', 'obs uno', 'C1', '01/11/2026'], ['', 'X', 'DEVOLUCION', 'sin guía', '', ''], [String(filas.find(r => r[1] === 'Envía')[2]), 'SE NEGO A RECIBIR', '', 'reingreso', '', '']]), 'Novedades');
   const archivo = path.join(capturas, 'plantilla_prueba.xlsx'); XLSX.writeFile(wb, archivo);
   await page.setInputFiles('#iArchivo', archivo);
   await page.waitForSelector('#iRevision table');

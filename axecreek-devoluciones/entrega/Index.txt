@@ -312,7 +312,7 @@ iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:1
     <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
       <label class="fld">Números de guía * <span class="muted" style="font-weight:500">· una por línea (máx. 2.000)</span><textarea class="inp lin" id="mlGuias" rows="7" placeholder="Ej: 123456789&#10;987654321"></textarea><span class="small cnt" id="cnt_mlGuias"></span></label>
       <div class="form2">
-        <label class="fld">Guías reemplazatorias <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlRemp" rows="4"></textarea><span class="small cnt" id="cnt_mlRemp"></span></label>
+        <label class="fld hidden" id="mlRempWrap">Guías reemplazatorias <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlRemp" rows="4"></textarea><span class="small cnt" id="cnt_mlRemp"></span></label>
         <label class="fld">Tipo de novedad <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlTipo" rows="4"></textarea><span class="small cnt" id="cnt_mlTipo"></span></label>
         <label class="fld">Estado transportadora <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlEstado" rows="4"></textarea><span class="small cnt" id="cnt_mlEstado"></span></label>
         <label class="fld">Observaciones <span class="muted" style="font-weight:500">· una por línea, o una sola para todas</span><textarea class="inp lin" id="mlObs" rows="4"></textarea><span class="small cnt" id="cnt_mlObs"></span></label>
@@ -774,7 +774,7 @@ function cargarRendimiento() {
 // ════════════════════════════════════════════════════════════
 const ING_COLS = [['GUIA', 'guia'], ['GUIA REEMPLAZATORIA', 'guiaRemp'], ['TIPO NOVEDAD', 'tipoNov'], ['ESTADO TRANSPORTADORA', 'estadoTrans'], ['OBSERVACIONES', 'obsTrans'], ['CUENTA', 'cuenta'], ['FECHA CAPTURA', 'fechaCap'], ['ID INTERRAPIDISIMO', 'idInter'], ['BODEGA INTERRAPIDISIMO', 'bodInter']];
 const normH = s => String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim();
-function colsPlantilla(trans) { const n = normH(trans); let c = ['GUIA', 'GUIA REEMPLAZATORIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES']; if (n === 'ENVIA') c = c.concat(['CUENTA', 'FECHA CAPTURA']); if (n === 'INTERRAPIDISIMO') c = c.concat(['ID INTERRAPIDISIMO', 'BODEGA INTERRAPIDISIMO']); return c; }
+function colsPlantilla(trans) { const n = normH(trans); let c = ['COORDINADORA', 'TCC', 'INTERRAPIDISIMO'].indexOf(n) >= 0 ? ['GUIA', 'GUIA REEMPLAZATORIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES'] : ['GUIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES']; if (n === 'ENVIA') c = c.concat(['CUENTA', 'FECHA CAPTURA']); if (n === 'INTERRAPIDISIMO') c = c.concat(['ID INTERRAPIDISIMO', 'BODEGA INTERRAPIDISIMO']); return c; }
 async function descargarPlantilla() {
   const tr = $('iTrans').value; if (!tr) return toast('Primero elige la transportadora', 'warn');
   const cols = colsPlantilla(tr);
@@ -783,7 +783,8 @@ async function descargarPlantilla() {
 const ML = [['mlGuias', 'guia'], ['mlRemp', 'guiaRemp'], ['mlTipo', 'tipoNov'], ['mlEstado', 'estadoTrans'], ['mlObs', 'obsTrans'], ['mlCuenta', 'cuenta'], ['mlFechaCap', 'fechaCap'], ['mlIdInter', 'idInter'], ['mlBodInter', 'bodInter']];
 // Cada línea cuenta, incluso vacía, para que la línea N de cada campo sea la guía N. Solo se ignora el salto final.
 function lineas(id) { const t = $(id).value.replace(/\r/g, ''); if (!t.trim()) return []; return t.replace(/\n+$/, '').split('\n').map(x => x.trim()); }
-function camposMasivo() { const n = normH($('iTrans').value); $('mlEnvia').classList.toggle('hidden', n !== 'ENVIA'); $('mlInter').classList.toggle('hidden', n !== 'INTERRAPIDISIMO'); contarLineas(); }
+const CON_REMP = ['COORDINADORA', 'TCC', 'INTERRAPIDISIMO'];
+function camposMasivo() { const n = normH($('iTrans').value); $('mlRempWrap').classList.toggle('hidden', CON_REMP.indexOf(n) < 0); if (CON_REMP.indexOf(n) < 0) $('mlRemp').value = ''; $('mlEnvia').classList.toggle('hidden', n !== 'ENVIA'); $('mlInter').classList.toggle('hidden', n !== 'INTERRAPIDISIMO'); contarLineas(); }
 function contarLineas() {
   const n = lineas('mlGuias').length; let mal = 0;
   ML.forEach(([id, k]) => { const c = $('cnt_' + id); if (!c) return; const L = lineas(id).length;
