@@ -76,6 +76,11 @@ const esperarToast = (page, re) => page.waitForFunction(r => [...document.queryS
 async function foto(page, nombre, escala) { await page.waitForTimeout(250); await page.screenshot({ path: path.join(capturas, nombre + '.png'), fullPage: false }); }
 
 (async () => {
+  titulo('0. Revisiones para el servidor de Google (HtmlService)');
+  const js = plantilla.split('<script>')[1].split('</script>')[0];
+  ok(js.indexOf('<?') < 0, 'Ningún scriptlet <? ?> dentro del JavaScript');
+  const lineasConTpl = js.split('\n').filter(l => (l.match(/`/g) || []).length % 2 === 1).length;
+  ok(lineasConTpl === 0, 'Ningún texto con comillas invertidas ocupa varias líneas', lineasConTpl);
   const browser = await chromium.launch();
   titulo('1. Login con código y dashboard (Admin)');
   let page = await nuevaPagina(browser, '');
