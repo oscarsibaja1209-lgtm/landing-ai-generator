@@ -1323,9 +1323,23 @@ function ejecutarMigracion(tokenSesion) {
     resetNov_();
     const antes = analizarMigracion_();
     // 1) Copia de seguridad del archivo completo en Drive
-    let backup = '';
-    try { const copia = DriveApp.getFileById(SPREADSHEET_ID).makeCopy('RESPALDO Novedades Devoluciones ' + Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH.mm')); backup = copia.getUrl(); }
-    catch (e) { throw new Error('No se pudo crear la copia de seguridad (' + e.message + '). No se cambió nada.'); }
+    // Si el proyecto no tiene permiso de Drive, el respaldo se hace duplicando las pestañas que se modifican
+    // dentro del mismo archivo (no necesita permisos extra).
+    let backup = '', backupTxt = '';
+    const sello = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH.mm');
+    try { const copia = DriveApp.getFileById(SPREADSHEET_ID).makeCopy('RESPALDO Novedades Devoluciones ' + sello); backup = copia.getUrl(); backupTxt = 'Respaldo creado en tu Drive.'; }
+    catch (eDrive) {
+      try {
+        const nombres = [];
+        [TABS.NOVEDADES, TABS.USUARIOS, TABS.DESPLEGABLES].forEach(n => {
+          const h = hoja_(n); if (!h) return;
+          const nombre = ('RESPALDO ' + sello + ' ' + n).slice(0, 99);
+          const c = h.copyTo(ss_()); c.setName(nombre); try { c.hideSheet(); } catch (e) {}
+          nombres.push(nombre);
+        });
+        backupTxt = 'Respaldo creado dentro del mismo archivo en pestañas ocultas: ' + nombres.join(', ') + '.';
+      } catch (e) { throw new Error('No se pudo crear la copia de seguridad (' + e.message + '). No se cambió nada.'); }
+    }
     // 2) Hojas nuevas
     const wsB = asegurarHoja_(TABS.BODEGAS, ['Ciudad', 'Dirección', 'Contacto', 'Teléfono', 'Activa (SI/NO)']);
     if (wsB.getLastRow() < 2) wsB.getRange(2, 1, 3, 5).setValues([['BOGOTA', '', '', '', 'SI'], ['CALI', '', '', '', 'SI'], ['MEDELLIN', '', '', '', 'SI']]);
@@ -1370,7 +1384,7 @@ function ejecutarMigracion(tokenSesion) {
     SpreadsheetApp.flush();
     [TABS.BODEGAS, TABS.PARAMETROS, TABS.USUARIOS, TABS.DESPLEGABLES].forEach(clearCache);
     registrarLog_(u, 'MIGRACIÓN', 'TODO', JSON.stringify(antes.cambios).slice(0, 2000) + ' | respaldo: ' + backup);
-    return { ok: true, msg: 'Estructura y estados actualizados. Respaldo creado en tu Drive.', backup, cambios: antes.cambios, total: antes.total };
+    return { ok: true, msg: 'Estructura y estados actualizados. ' + backupTxt, backup, cambios: antes.cambios, total: antes.total };
   });
 }
 

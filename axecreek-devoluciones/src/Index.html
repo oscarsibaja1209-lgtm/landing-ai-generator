@@ -1177,7 +1177,7 @@ function previaMigracion() {
 function aplicarMigracion() {
   confirmar('Actualizar estructura y estados', 'Primero se hará una copia de seguridad del archivo en tu Drive y luego se aplicarán los cambios. Te recomendamos también hacer tu propia copia. ¿Continuar?', 'Hacer copia y aplicar').then(ok => {
     if (!ok) return; cargando('cfgMigra', 'Creando copia de seguridad y aplicando… puede tardar un minuto.');
-    gs('ejecutarMigracion').then(r => { if (!r.ok) { $('cfgMigra').innerHTML = `<div class="alert bad"><i class="fas fa-circle-exclamation"></i><div>${esc(r.msg)}</div></div>`; return; } $('cfgMigra').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div><b>${esc(r.msg)}</b><br><a href="${esc(r.backup)}" target="_blank">Abrir la copia de seguridad</a></div></div>`; toast('Actualización completa', 'ok'); cargarConfig(); S.ini.bodegasDropi = S.ini.bodegasDropi; });
+    gs('ejecutarMigracion').then(r => { if (!r.ok) { $('cfgMigra').innerHTML = `<div class="alert bad"><i class="fas fa-circle-exclamation"></i><div>${esc(r.msg)}</div></div>`; return; } $('cfgMigra').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div><b>${esc(r.msg)}</b>${r.backup ? `<br><a href="${esc(r.backup)}" target="_blank">Abrir la copia de seguridad</a>` : ''}</div></div>`; toast('Actualización completa', 'ok'); cargarConfig(); S.ini.bodegasDropi = S.ini.bodegasDropi; });
   });
 }
 </script>

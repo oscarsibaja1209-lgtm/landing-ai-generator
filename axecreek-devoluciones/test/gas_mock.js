@@ -40,6 +40,7 @@ function crearMock(rutaJson, opciones = {}) {
     insertColumnsAfter(after, n) { this.maxCols += n; }
     getRange(r, c, nr = 1, nc = 1) { if (r < 1 || c < 1 || nr < 1 || nc < 1) throw new Error(`Rango inválido ${r},${c},${nr},${nc}`); if (c + nc - 1 > this.maxCols) throw new Error('Columnas fuera del rango de la hoja'); return new Range(this, r, c, nr, nc); }
     getDataRange() { return new Range(this, 1, 1, Math.max(1, this.getLastRow()), Math.max(1, this.getLastColumn())); }
+    copyTo(destino) { const n = new Sheet(this.nombre + ' (copia)', []); n.filas = this.filas.map(r => r.slice()); n.maxCols = this.maxCols; hojas[n.nombre] = n; const self = n; n.setName = nm => { delete hojas[self.nombre]; self.nombre = nm; hojas[nm] = self; return self; }; n.hideSheet = () => self; return n; }
     appendRow(arr) { stats.appendRow++; const r = this.getLastRow() + 1; this._escribir(r, 1, [arr]); }
     formato(r, c) { return this.formatos[r + ',' + c] || (this.colTexto && this.colTexto.has(c) && r >= 4 ? '@' : ''); }
     _leer(r, c, nr, nc) {
@@ -87,7 +88,7 @@ function crearMock(rutaJson, opciones = {}) {
     LockService: { getScriptLock: () => ({ waitLock: () => {}, releaseLock: () => {} }) },
     Session: { getActiveUser: () => ({ getEmail: () => '' }) },
     MailApp: { sendEmail: o => correos.push(o) },
-    DriveApp: { getFileById: () => ({ makeCopy: n => ({ getUrl: () => 'https://drive.google.com/copia/' + encodeURIComponent(n) }) }) },
+    DriveApp: { getFileById: () => { if (opciones.sinDrive) throw new Error('Los permisos especificados no son suficientes para llamar a DriveApp.getFileById.'); return { makeCopy: n => ({ getUrl: () => 'https://drive.google.com/copia/' + encodeURIComponent(n) }) }; } },
     UrlFetchApp: { fetch: () => ({ getResponseCode: () => 200, getContentText: () => '{}' }) },
     HtmlService: { createTemplateFromFile: () => ({ evaluate() { const o = { setTitle: () => o, addMetaTag: () => o, setXFrameOptionsMode: () => o }; return o; } }), XFrameOptionsMode: { DEFAULT: 'DEFAULT' } },
     ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }) },

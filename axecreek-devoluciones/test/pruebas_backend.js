@@ -69,6 +69,14 @@ console.log('    cambios:', JSON.stringify(pv.cambios));
 ok(run('previsualizarMigracion', tGest).ok === false, 'Gestión no puede migrar (solo Admin)');
 const mig = run('ejecutarMigracion', tAdmin);
 ok(mig.ok && /drive/.test(mig.backup), 'Migración aplicada con respaldo en Drive', mig);
+{ // Sin permiso de Drive (caso real reportado): respaldo en pestañas ocultas del mismo archivo
+  const m2 = crearMock(rutaJson, { formatoTextoGuia: true, sinDrive: true }); const c2 = m2.cargar(rutaGs);
+  const run2 = (fn, ...a) => { vm.runInContext('_nov=null;_usuarioMemo={};_ss=null;', c2); return c2[fn](...a); };
+  run2('solicitarAccesoOTP', 'oscar.sibaja@dropi.co'); const o2 = m2.correos.at(-1).htmlBody.match(/>(\d{6})</)[1]; const t2 = run2('validarCodigoOTP', 'oscar.sibaja@dropi.co', o2).token;
+  const r2 = run2('ejecutarMigracion', t2);
+  const resp = Object.keys(m2.hojas).filter(n => n.indexOf('RESPALDO') === 0);
+  ok(r2.ok && resp.length === 3 && m2.hojas[resp.find(n => /NOVEDADES/.test(n))].filas[5][26] === 'Culminado - Notificado', 'Sin permiso de Drive: respalda en pestañas ocultas (con los estados viejos) y migra igual', r2.msg);
+}
 const estadosHoja = {}; NOV().slice(3).forEach(r => { if (r[2]) estadosHoja[r[C.ESTADO]] = (estadosHoja[r[C.ESTADO]] || 0) + 1; });
 ok(estadosHoja[E.SOL_NOTIF] === 8658 && estadosHoja[E.BOD_NOTIF] === 937 && estadosHoja[E.CULM_BOD] === 1 && !estadosHoja['Culminado - Notificado'], 'La hoja quedó con los estados nuevos', estadosHoja);
 const transito = NOV().slice(3).filter(r => r[C.ESTADO_RECEPCION] === EB.TRANSITO).length;
