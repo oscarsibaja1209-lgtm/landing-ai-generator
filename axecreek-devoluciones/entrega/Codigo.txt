@@ -426,7 +426,13 @@ function getMetricasFiltradas(filtros, tokenSesion) {
       }
       filas.push(r);
     }
-    return { ok: true, stats: calcularStats_(filas, tipoF), legado };
+    const st = calcularStats_(filas, tipoF);
+    if (esStaff_(u)) {
+      const rend = {};
+      filas.forEach(r => { const a = txt_(r[COL.ASESOR_GEST]); if (!a || a === 'Sin asignar') return; rend[a] = (rend[a] || 0) + 1; });
+      st.rendimiento = Object.entries(rend).sort((a, b) => b[1] - a[1]).slice(0, 12);
+    }
+    return { ok: true, stats: st, legado };
   });
 }
 
@@ -834,7 +840,14 @@ function getGruposWsp(filtros, tokenSesion) {
       const obs = txt_(prov[COL.OBS_DROPI]);
       const msgConfirmar = `Cordial saludo. Mi nombre es *${u.nombre}* del equipo de Dropi.${NL}${NL}Me comunico con usted para informarle que se han realizado múltiples intentos de devolución de su(s) paquete(s) a la bodega registrada, sin que haya sido posible concretar la entrega.${NL}${NL}*ID Bodega:* ${bod}${NL}` + (tipos ? `*Novedad reportada:* ${tipos}${NL}` : '') + `${NL}*Guías en proceso de devolución:*${NL}${lineas}${NL}${NL}*Ciudad / Departamento:* ${loc}${NL}*Dirección registrada:* ${dir}${NL}${NL}¡IMPORTANTE! Las transportadoras han intentado la devolución sin éxito. *De no recibir respuesta oportuna o no poder concretar la entrega, el paquete entrará en un proceso de rezagos.*${NL}${NL}Por favor, confírmenos lo siguiente:${NL}1. ¿La dirección registrada es correcta?${NL}2. ¿Es una unidad residencial o centro comercial?${NL}3. En caso de cambio, ¿cuál sería la nueva dirección exacta?${NL}` + (obs ? `${NL}*Observación Dropi:* ${obs}${NL}` : '') + `${NL}Quedamos atentos a su pronta respuesta para gestionar la solución. Muchas gracias.`;
       const msgUltimo = `Cordial saludo. Le escribe *${u.nombre}* de Dropi.${NL}${NL}*ÚLTIMO AVISO* sobre la devolución de sus guías (ID Bodega ${bod}):${NL}${lineas}${NL}${NL}No hemos recibido confirmación de una dirección de entrega. Si no tenemos respuesta, los paquetes se enviarán a la *Bodega Dropi* y podrán generar un cobro mensual por almacenamiento.${NL}${NL}Por favor, confírmenos hoy la dirección donde puede recibirlos. Gracias.`;
+      const emailProv = txt_(prov[COL.EMAIL_PROV]).toLowerCase(); const mb = txt_(prov[COL.MARCA_BLANCA]);
+      const esGoevery = emailProv === 'dropi-provider@goevery.co';
+      const esMarcaBlanca = !!mb && ['DROPI', 'SIN MARCA', '-'].indexOf(normTxt_(mb)) < 0;
+      const motivo = esGoevery ? 'Proveedor GoEvery (Mayra)' : esMarcaBlanca ? 'Marca blanca: ' + mb : '';
+      const todas = gs.map(r => f_(r[COL.GUIA]));
+      const escalamiento = motivo ? `🚨 *ESCALAMIENTO REQUERIDO*${NL}🏢 Bodega: ${bod}${NL}📋 Tipo: ${motivo}${NL}📦 Guías: ${todas.join(', ')}${NL}⚠️ Novedad: ${tipos || '—'}${NL}Por favor gestionar con el comercial o encargado.` : '';
       return {
+        escalar: !!motivo, motivo, escalamiento, marcaBlanca: mb, esGoevery,
         bodega: bod, guias: gs.length, pendientes: gs.filter(r => estadoDe_(r) === E.PENDIENTE).length,
         tel: f_(prov[COL.TEL_PROV]), telTienda: f_(prov[COL.TEL_TIENDA]), categoria: txt_(prov[COL.CATEGORIA]), ciudad: loc,
         estados: [...new Set(gs.map(estadoDe_))], trans: Object.keys(porTrans), msg: msgConfirmar, msgUltimo

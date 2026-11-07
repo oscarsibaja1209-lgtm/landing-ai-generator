@@ -252,6 +252,15 @@ ok(r.ok && r.movidas === bodW.pendientes && r.enviadosHoy === 1, 'Al enviar: cue
 const wc = run('getGruposWsp', {}, tCom);
 ok(wc.ok && wc.wspArray.every(x => /PREMIUM/.test(x.categoria)), 'Comercial solo arma WhatsApp de su categoría');
 
+{
+  const wAll = run('getGruposWsp', {}, tGest).wspArray;
+  const goe = wAll.find(x => x.esGoevery), mbx = wAll.find(x => x.marcaBlanca && !/^(dropi|sin marca|-)$/i.test(x.marcaBlanca));
+  ok(wAll.filter(x => x.escalar).every(x => x.escalamiento.indexOf('ESCALAMIENTO REQUERIDO') >= 0), 'GoEvery / marca blanca traen el texto de escalamiento');
+  ok(!goe || goe.escalar, 'GoEvery queda como escalamiento obligatorio (no WhatsApp)');
+  ok(!mbx || mbx.escalar, 'Marca blanca (no Dropi) queda como escalamiento obligatorio', mbx && mbx.marcaBlanca);
+  ok(wAll.filter(x => !x.escalar).every(x => !x.motivo), 'Proveedores Dropi normales sí van por WhatsApp');
+  console.log('    escalamientos en la cola:', wAll.filter(x => x.escalar).length, 'de', wAll.length);
+}
 titulo('13. Indemnizaciones');
 // simular una guía recibida hace 3 meses
 const filaVieja = itemMde.row;

@@ -173,6 +173,12 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   const wbx = XL.readFile(rutaX); const sh = wbx.Sheets[wbx.SheetNames[0]]; const filasX = XL.utils.sheet_to_json(sh, { header: 1 });
   ok(/\.xlsx$/.test(descarga.suggestedFilename()) && filasX[0][0] === 'Fecha novedad' && filasX[0].length === 22 && filasX.length > 1, 'Exporta Excel (.xlsx) con cada dato en su columna', filasX[0] && filasX[0].join(','));
   ok(sh['C2'] && sh['C2'].t === 's', 'En el Excel la guía queda como texto (no pierde ceros)');
+  { // abrir con LibreOffice (lector estricto, parecido a Excel): debe traer encabezados y datos
+    const { execSync } = require('child_process'); const outDir = path.join(capturas, 'lo');
+    try { execSync(`soffice --headless --convert-to csv --outdir "${outDir}" "${rutaX}"`, { stdio: 'ignore', timeout: 120000 }); const csv = fs.readFileSync(path.join(outDir, 'export_gestion.csv'), 'utf8').split('\n');
+      ok(/^Fecha novedad,Transportadora,Guía/.test(csv[0]) && csv.length > 5 && csv[1].split(',').length >= 20, 'LibreOffice abre el Excel con encabezados y datos', csv[0].slice(0, 60) + ' | filas ' + csv.length);
+    } catch (e) { ok(false, 'LibreOffice abre el Excel', e.message); }
+  }
   // bandeja notificadas
   await page.click('#gBandejas >> text=Notificadas sin confirmar');
   await page.waitForFunction(() => /Notificadas sin confirmar/.test(document.querySelector('#gBandejas .chip.on').textContent));
@@ -188,6 +194,8 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.click('#gLista .grp >> nth=0 >> text=Ficha'); await page.waitForSelector('#f_estado');
   const filaN = await page.evaluate(() => S.ficha.ficha.row);
   ok(await page.inputValue('#f_estado') === 'Solución notificada', 'La ficha muestra el estado actual de la guía (no lo cambia a Pendiente)');
+  const filaEnvia = m.hojas.NOVEDADES.filas.findIndex((r, i) => i > 2 && r[1] === 'Envía' && r[9]) + 1;
+  if (filaEnvia > 0) { const fe = await page.evaluate(f => new Promise(res => google.script.run.withSuccessHandler(res).getFichaGuia(f, token())), filaEnvia); ok(fe.ok && fe.ficha.fechaCap, 'La ficha de una guía de Envía trae la fecha de captura', fe.ficha && fe.ficha.fechaCap); }
   await page.fill('#f_obsDropi', 'Nota sin cambiar estado'); await page.click('#btnFicha'); await esperarToast(page, /Guía actualizada/);
   ok(m.hojas.NOVEDADES.filas[filaN - 1][26] === 'Solución notificada' && m.hojas.NOVEDADES.filas[filaN - 1][25] === 'Nota sin cambiar estado', 'Guardar la ficha sin tocar el estado conserva el estado');
   // recorrido por todas las secciones del Admin/Gestión sin errores
@@ -220,6 +228,8 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.click('#nav-whatsapp');
   await page.waitForSelector('#wPrev .wa-prev');
   ok(/Gestor Prueba/.test(await page.textContent('#wMsg')), 'Mensaje firmado por el asesor');
+  const iEsc = await page.evaluate(() => S.wsp.data.wspArray.findIndex(x => x.escalar));
+  if (iEsc >= 0) { await page.evaluate(i => verWsp(i), iEsc); ok(/ESCALAMIENTO OBLIGATORIO/.test(await page.textContent('#wPrev')) && !(await page.$('#wPrev .btn-ok')), 'GoEvery / marca blanca: muestra escalamiento y NO el botón de WhatsApp'); }
   await foto(page, '06_whatsapp');
   ok(page.errores.length === 0, 'Sin errores de JavaScript (Gestión)', page.errores.join(' | '));
   await page.close();
