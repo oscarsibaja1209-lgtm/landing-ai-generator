@@ -47,7 +47,8 @@ const LIBS = {
   'xlsx.full.min.js': path.join(libs, 'node_modules/xlsx/dist/xlsx.full.min.js'),
   'chart.umd.min.js': path.join(libs, 'node_modules/chart.js/dist/chart.umd.js'),
   'html5-qrcode.min.js': path.join(libs, 'node_modules/html5-qrcode/html5-qrcode.min.js'),
-  'all.min.css': path.join(libs, 'node_modules/@fortawesome/fontawesome-free/css/all.min.css')
+  'all.min.css': path.join(libs, 'node_modules/@fortawesome/fontawesome-free/css/all.min.css'),
+  'exceljs.min.js': path.join(libs, 'node_modules/exceljs/dist/exceljs.min.js')
 };
 const plantilla = fs.readFileSync(rutaHtml, 'utf8');
 const SHIM = `window.google={script:{url:{getLocation:cb=>setTimeout(()=>cb({hash:'',parameters:{}}),0)},history:{replace(){}},run:(function mk(ok,fail){return new Proxy({},{get(_,k){if(k==='withSuccessHandler')return f=>mk(f,fail);if(k==='withFailureHandler')return f=>mk(ok,f);return (...a)=>{window.__gs(k,JSON.stringify(a)).then(r=>{const v=JSON.parse(r);if(v&&v.__err){fail&&fail(new Error(v.__err));}else ok&&ok(v);});};}});})()}};`;
@@ -116,7 +117,7 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.waitForSelector('#cfgMigra .alert.ok', { timeout: 20000 });
   ok(/Estructura y estados actualizados/.test(await page.textContent('#cfgMigra')) && /RESPALDO MIGRACION/.test(await page.textContent('#cfgMigra')), 'Migración por pasos aplicada y respaldo creado');
   await page.click('#cfgBodegas .btn >> nth=2');
-  await page.fill('#b_dir', 'Calle 10 # 20-30, Itagüí'); await page.fill('#b_contacto', 'Jefe de bodega'); await page.fill('#b_tel', '3001112233');
+  await page.fill('#b_dir', 'Calle 10 # 20-30, Itagüí'); await page.fill('#b_contacto', 'Jefe de bodega'); await page.fill('#b_tel', '3001112233'); await page.fill('#b_correo', 'bodega.mde@dropi.co');
   await page.click('#modal .btn-p'); await esperarToast(page, /Bodega guardada/);
   ok(m.hojas.CONFIG_BODEGAS_DROPI.filas.some(r => r[1] === 'Calle 10 # 20-30, Itagüí'), 'Dirección de la bodega guardada desde la app');
   await page.fill('#par_CONTACTO_URGENTE', 'Camilo · 300 000 0000'); await page.click('#cfgParams .btn >> nth=1'); await esperarToast(page, /Parámetro guardado/);
@@ -151,10 +152,24 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   // selección masiva
   await page.click('#gLista .grp >> nth=1 >> thead input[type=checkbox]');
   await page.waitForSelector('#gBulk:not(.hidden)');
-  await page.selectOption('#bkEstado', 'En gestión comercial');
-  await page.fill('#bkObs', 'Premium sin contacto');
-  await page.click('#gBulk .btn-p'); await esperarToast(page, /actualizada/);
-  ok(true, 'Cambio de estado masivo desde la barra');
+  ok(!(await page.$('#gBulk .btn-ok')), 'En Pendientes NO aparece "Confirmar entregadas" (solo en su bandeja)');
+  const selMasivo = await page.evaluate(() => [...S.gest.sel]);
+  await page.click('#gBulk >> text=Gestionar seleccionadas');
+  await page.selectOption('#bkEstado', 'Solución lista - por notificar');
+  await page.fill('#bkDir', 'Carrera 50 # 10-20'); await page.fill('#bkCiudadP', 'PEREIRA'); await page.fill('#bkDepto', 'RISARALDA'); await page.fill('#bkTel', '3205556677'); await page.fill('#bkObs', 'Proveedor cambió de ciudad');
+  await foto(page, '03c_masivo');
+  await page.click('#btnMasivo');
+  await page.waitForSelector('#modal.on >> text=Entendido');
+  const fm = m.hojas.NOVEDADES.filas[selMasivo[0] - 1];
+  ok(fm[26] === 'Solución lista - por notificar' && fm[21] === 'PEREIRA' && fm[22] === 'RISARALDA' && String(fm[18]) === '3205556677' && fm[24] === 'Carrera 50 # 10-20', 'Masivo guarda dirección, ciudad, departamento y teléfono en todas las seleccionadas', fm.slice(18, 27).join(' | '));
+  ok(selMasivo.every(r => m.hojas.NOVEDADES.filas[r - 1][21] === 'PEREIRA'), 'Las ' + selMasivo.length + ' guías seleccionadas quedaron con la ciudad nueva');
+  await page.click('#modal >> text=Entendido');
+  const [descarga] = await Promise.all([page.waitForEvent('download'), page.click('#gFiltros >> text=Exportar')]);
+  const rutaX = path.join(capturas, 'export_gestion.xlsx'); await descarga.saveAs(rutaX);
+  const XL = require(path.join(libs, 'node_modules/xlsx'));
+  const wbx = XL.readFile(rutaX); const sh = wbx.Sheets[wbx.SheetNames[0]]; const filasX = XL.utils.sheet_to_json(sh, { header: 1 });
+  ok(/\.xlsx$/.test(descarga.suggestedFilename()) && filasX[0][0] === 'Fecha novedad' && filasX[0].length === 22 && filasX.length > 1, 'Exporta Excel (.xlsx) con cada dato en su columna', filasX[0] && filasX[0].join(','));
+  ok(sh['C2'] && sh['C2'].t === 's', 'En el Excel la guía queda como texto (no pierde ceros)');
   // bandeja notificadas
   await page.click('#gBandejas >> text=Notificadas sin confirmar');
   await page.waitForFunction(() => /Notificadas sin confirmar/.test(document.querySelector('#gBandejas .chip.on').textContent));
@@ -165,6 +180,7 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.click('#mTipos >> text=Envío a Bodega Dropi');
   const transFicha = m.hojas.NOVEDADES.filas[filaFicha - 1][1];
   await page.selectOption('#mTrans', transFicha); await page.selectOption('#mBod', 'MEDELLIN');
+  ok(await page.isVisible('#mCopiaWrap') && /bodega.mde@dropi.co/.test(await page.textContent('#mCopiaTxt')), 'Ofrece enviar copia al correo de la Bodega Medellín');
   await page.click('text=Vista previa');
   await page.waitForSelector('#mFrame');
   const frameHtml = await page.$eval('#mFrame', f => f.srcdoc);
@@ -173,6 +189,10 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.fill('#mPara', 'ops@transportadora.com');
   await page.click('text=Enviar correo'); await page.click('#cfSi');
   await esperarToast(page, /Correo enviado/);
+  ok(/bodega.mde@dropi.co/.test(m.correos[m.correos.length - 1].cc), 'El correo lleva copia a la bodega');
+  await page.selectOption('#mTrans', ''); await page.fill('#mPara', ''); await page.selectOption('#mTrans', transFicha);
+  await page.waitForFunction(() => document.querySelector('#mPara').value === 'ops@transportadora.com');
+  ok(true, 'Al volver a elegir la transportadora, el correo de destino se llena solo');
   ok(m.hojas.NOVEDADES.filas[filaFicha - 1][26] === 'Bodega Dropi notificada', 'Guía quedó "Bodega Dropi notificada"');
 
   titulo('5. WhatsApp');
@@ -209,6 +229,10 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.click('#oMasivaRes .btn-p');
   await page.waitForSelector('#oMasivaRes .alert.ok', { timeout: 10000 });
   ok(/3 guía\(s\) recibida/.test(await page.textContent('#oMasivaRes')) && /NO RECIBIR 1/.test(await page.textContent('#oMasivaRes')), 'Búsqueda masiva: 3 recibidas y 1 NO RECIBIR');
+  await page.click('#oTabla tbody tr:first-child td.g', { clickCount: 2 });
+  ok(await page.evaluate(() => document.activeElement.id !== 'oScan' && String(window.getSelection()).length > 0), 'En Bodega se puede seleccionar y copiar una guía de la tabla');
+  const [dlB] = await Promise.all([page.waitForEvent('download'), page.click('#tab-bodega >> text=Exportar')]);
+  ok(/\.xlsx$/.test(dlB.suggestedFilename()), 'Bodega exporta Excel (.xlsx)');
   ok(page.errores.length === 0, 'Sin errores de JavaScript (Bodega)', page.errores.join(' | '));
   await page.close();
   page = await nuevaPagina(browser, tMde, { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -253,6 +277,17 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await foto(page, '10_buscador');
   await page.click('#nav-ingreso');
   ok(await page.$eval('#iTrans', s => s.disabled && s.value === 'Envía'), 'Transportadora fija en Envía');
+  await page.waitForSelector('#iManual input.mi');
+  ok((await page.$$eval('#iManual th', t => t.map(x => x.textContent))).some(t => /Cuenta/.test(t)), 'Tabla manual con columnas de Envía (cuenta y fecha de captura)');
+  const celdas = await page.$$('#iManual tbody tr:nth-child(1) input.mi');
+  await celdas[0].fill('014188880001'); await celdas[2].fill('DIRECCION ERRADA'); await celdas[4].fill('escrita a mano');
+  await page.evaluate(() => { const el = document.querySelector('#iManual tbody tr:nth-child(2) input.mi'); const dt = new DataTransfer(); dt.setData('text', '014188880002\t\tNO SE UBICA\tDEV\tpegada 1\n014188880003\t\tSE NEGO\tDEV\tpegada 2'); el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+  await page.waitForFunction(() => S.manual[2] && S.manual[2].guia === '014188880003');
+  await foto(page, '11a_ingreso_manual');
+  await page.click('#tab-ingreso >> text=Revisar y guardar');
+  await page.waitForSelector('#iRevision table');
+  await page.click('#btnGuardarIng'); await esperarToast(page, /guardadas/);
+  ok(['014188880001', '014188880002', '014188880003'].every(g => filas.some(r => r[2] === g)) && filas.find(r => r[2] === '014188880003')[6] === 'pegada 2', 'Ingreso escrito a mano y pegado desde Excel: 3 guías con sus datos en su fila');
   const XLSX = require(path.join(libs, 'node_modules/xlsx'));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['GUIA', 'GUIA REEMPLAZATORIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES', 'CUENTA', 'FECHA CAPTURA'], ['014199990001', '', 'DIRECCION ERRADA', 'DEVOLUCION', 'obs uno', 'C1', '01/11/2026'], ['014199990002', '', '', 'DEVOLUCION', 'sin tipo', '', ''], [String(filas.find(r => r[1] === 'Envía')[2]), '', 'SE NEGO A RECIBIR', '', 'reingreso', '', '']]), 'Novedades');
@@ -272,7 +307,7 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   page = await nuevaPagina(browser, tokenDe('comercial@dropi.co'));
   await page.waitForSelector('#kLista .grp, #kLista .empty');
   ok((await page.$$('#nav button')).length === 3, 'Comercial ve 3 secciones');
-  if (await page.$('#kLista .grp')) { await page.click('#kLista .grp >> nth=0 >> text=Gestionar proveedor'); await page.waitForSelector('#kDir'); await page.fill('#kDir', 'Calle 1 # 2-3'); await page.fill('#kObs', 'Confirmado por teléfono'); await foto(page, '12_comercial'); await page.click('#btnCom'); await esperarToast(page, /actualizada/); ok(true, 'Comercial guarda solución'); }
+  if (await page.$('#kLista .grp')) { await page.click('#kLista .grp >> nth=0 >> text=Gestionar proveedor'); await page.waitForSelector('#kDir'); await page.fill('#kDir', 'Calle 1 # 2-3'); await page.fill('#kCiudad', 'MANIZALES'); await page.fill('#kTel', '3157778899'); await page.fill('#kObs', 'Confirmado por teléfono'); await foto(page, '12_comercial'); await page.click('#btnCom'); await esperarToast(page, /actualizada/); ok(m.hojas.NOVEDADES.filas.some(r => r[21] === 'MANIZALES' && String(r[18]) === '3157778899' && r[26] === 'Solución lista - por notificar'), 'Comercial guarda solución con ciudad y celular nuevos'); }
   ok(page.errores.length === 0, 'Sin errores de JavaScript (Comercial)', page.errores.join(' | '));
   await page.close();
   page = await nuevaPagina(browser, tokenDe('indem@dropi.co'));

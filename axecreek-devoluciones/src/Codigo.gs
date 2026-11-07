@@ -22,7 +22,8 @@ const TABS = Object.freeze({
   BODEGAS:         'CONFIG_BODEGAS_DROPI',
   PARAMETROS:      'CONFIG_PARAMETROS',
   REEMPLAZOS:      'HISTORIAL_REEMPLAZATORIAS',
-  RECHAZOS:        'RECHAZOS_BODEGA'
+  RECHAZOS:        'RECHAZOS_BODEGA',
+  CORREOS:         'CONFIG_CORREOS'
 });
 
 // Columnas hoja NOVEDADES (base 0)
@@ -209,11 +210,11 @@ function getBodegasDropi_() {
   const out = [];
   for (let i = 1; i < data.length; i++) {
     const c = txt_(data[i][0]); if (!c) continue;
-    const b = { rowIndex: i + 1, ciudad: c, clave: ciudadKey_(c), direccion: txt_(data[i][1]), contacto: txt_(data[i][2]), telefono: txt_(data[i][3]), activa: normTxt_(data[i][4] || 'SI') !== 'NO' };
+    const b = { rowIndex: i + 1, ciudad: c, clave: ciudadKey_(c), direccion: txt_(data[i][1]), contacto: txt_(data[i][2]), telefono: txt_(data[i][3]), activa: normTxt_(data[i][4] || 'SI') !== 'NO', correo: txt_(data[i][5]) };
     const prev = out.findIndex(x => x.clave === b.clave);
     if (prev < 0) out.push(b); else if (!out[prev].direccion && b.direccion) out[prev] = b; // ciudad repetida: gana la que tiene dirección
   }
-  if (!out.length) ['BOGOTA', 'CALI', 'MEDELLIN'].forEach(c => out.push({ rowIndex: 0, ciudad: c, clave: c, direccion: '', contacto: '', telefono: '', activa: true }));
+  if (!out.length) ['BOGOTA', 'CALI', 'MEDELLIN'].forEach(c => out.push({ rowIndex: 0, ciudad: c, clave: c, direccion: '', contacto: '', telefono: '', activa: true, correo: '' }));
   return out;
 }
 function bodegaPorCiudad_(ciudad) { const k = ciudadKey_(ciudad); return getBodegasDropi_().find(b => b.clave === k) || null; }
@@ -342,7 +343,7 @@ function getDatosIniciales(tokenSesion) {
     const p = getParametros_();
     const out = {
       usuario: u, transportadoras, estados: ESTADOS_ORDEN, estadosBodega: [EB.TRANSITO, EB.RECIBIDO, EB.RETIRADO, EB.REENVIADO],
-      bodegasDropi: getBodegasDropi_().filter(b => b.activa).map(b => ({ ciudad: b.ciudad, clave: b.clave, direccion: b.direccion })),
+      bodegasDropi: getBodegasDropi_().filter(b => b.activa).map(b => ({ ciudad: b.ciudad, clave: b.clave, direccion: b.direccion, correo: b.correo })),
       parametros: { VALOR_COBRO_MENSUAL: p.VALOR_COBRO_MENSUAL, LIMITE_WSP_DIA: p.LIMITE_WSP_DIA, CONTACTO_URGENTE: p.CONTACTO_URGENTE, MAX_BUSQUEDA: p.MAX_BUSQUEDA, CRM: !!p.CRM_WEBHOOK_URL },
       isIAConfigured: !!(PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY'))
     };
@@ -883,6 +884,21 @@ function enviarWspCRM(payload, tokenSesion) {
 function actualizarEstadoBodegaWsp(idBodega, tokenSesion) { return registrarEnvioWsp(idBodega, tokenSesion); }
 
 // ── CORREOS A TRANSPORTADORAS ───────────────────────────────
+// Destinatarios guardados por transportadora (pestaña CONFIG_CORREOS): se llenan solos y se actualizan al enviar.
+function leerDestinatarios_() { const out = {}; const d = leerHojaConfig_(TABS.CORREOS); for (let i = 1; i < d.length; i++) { const t = txt_(d[i][0]); if (t) out[normTxt_(t)] = { fila: i + 1, nombre: t, para: txt_(d[i][1]), cc: txt_(d[i][2]) }; } return out; }
+function getDestinatariosCorreo(transportadora, tokenSesion) {
+  return seguro_(() => { exigir_(tokenSesion, 'correos'); const x = leerDestinatarios_()[normTxt_(transportadora)]; return { ok: true, para: x ? x.para : '', cc: x ? x.cc : '' }; });
+}
+function guardarDestinatarios_(u, transportadora, para, cc) {
+  const ws = asegurarHoja_(TABS.CORREOS, ['Transportadora', 'Para', 'CC', 'Actualizado por', 'Fecha']);
+  const x = leerDestinatarios_()[normTxt_(transportadora)];
+  if (x && x.para === txt_(para) && x.cc === txt_(cc)) return false;
+  const fila = [txt_(transportadora), txt_(para), txt_(cc), u.nombre, hoy_()];
+  if (x) ws.getRange(x.fila, 1, 1, 5).setValues([fila]); else ws.appendRow(fila);
+  clearCache(TABS.CORREOS);
+  registrarLog_(u, 'DESTINATARIOS CORREO', transportadora, txt_(para) + ' | CC: ' + txt_(cc));
+  return true;
+}
 const TIPOS_CORREO = {
   solucion: { desde: E.SOL_LISTA, hacia: E.SOL_NOTIF, titulo: 'Soluciones de novedades de devolución' },
   bodega:   { desde: E.BOD_LISTA, hacia: E.BOD_NOTIF, titulo: 'Devoluciones a Bodega Dropi' },
@@ -951,7 +967,8 @@ function enviarCorreoTransportadora(payload, tokenSesion) {
     if (!filas.length) return { ok: false, msg: 'No hay guías para el reporte.' };
     const { data } = nov_();
     const c = construirCorreo_(u, payload, tipo, bodega, filas.map(f => data[f - 1]));
-    const cc = [txt_(payload.cc), u.email].filter(Boolean).join(',');
+    const ccBodega = (bodega && bodega.correo && payload.copiarBodega !== false) ? bodega.correo : '';
+    const cc = [txt_(payload.cc), ccBodega, u.email].filter(Boolean).join(',');
     MailApp.sendEmail({ to: payload.para, cc, replyTo: u.email, name: u.nombre + ' · Dropi', subject: c.asunto, htmlBody: c.html, attachments: [Utilities.newBlob(c.csv, 'text/csv', c.nombreArchivo)] });
     const hoy = hoy_();
     filas.forEach(fl => {
@@ -962,7 +979,9 @@ function enviarCorreoTransportadora(payload, tokenSesion) {
     });
     escribirCambios_(filas, COL.ESTADO, COL.FECHA_CIERRE);
     registrarLog_(u, 'CORREO ENVIADO', payload.transportadora, `${filas.length} guías -> ${payload.para} (${tipo.hacia})`);
-    return { ok: true, msg: `Correo enviado a ${payload.para}. ${filas.length} guías pasaron a "${tipo.hacia}".` };
+    let recordados = false;
+    if (payload.recordar !== false) { try { recordados = guardarDestinatarios_(u, payload.transportadora, payload.para, payload.cc); } catch (e) {} }
+    return { ok: true, msg: `Correo enviado a ${payload.para}${ccBodega ? ' (copia a la bodega ' + bodega.ciudad + ')' : ''}. ${filas.length} guías pasaron a "${tipo.hacia}".` + (recordados ? ' Destinatarios guardados para ' + payload.transportadora + '.' : '') };
   });
 }
 
@@ -1108,9 +1127,8 @@ function guardarRecepcionBodega(ids, datos, tokenSesion) {
 function exportarBodegasDropiCSV(filtros, tokenSesion) {
   const res = getBodegasDropiData(Object.assign({}, filtros || {}, { porPagina: 0, pagina: 1 }), tokenSesion);
   if (!res.ok) return res;
-  const csv = aCSV_(['Guía inicial', 'Guías reemplazatorias', 'Transportadora', 'ID bodega', 'Categoría', 'Bodega Dropi', 'Estado bodega', 'Fecha notificación', 'Fecha recepción', 'Fecha devolución', 'Observaciones'],
-    res.rows.map(r => [r.guia, r.remps.join(' / '), r.trans, r.idBodega, r.categoria, r.ciudadDestino, r.estadoBodega, r.fechaNotif, r.fechaRecep, r.fechaDevolucion, r.obs]));
-  return { ok: true, fileData: Utilities.base64Encode(csv, Utilities.Charset.UTF_8) };
+  return { ok: true, nombre: 'Bodega Dropi', headers: ['Guía inicial', 'Guías reemplazatorias', 'Transportadora', 'ID bodega', 'Categoría', 'Bodega Dropi', 'Estado bodega', 'Fecha notificación', 'Fecha recepción', 'Fecha devolución', 'Observaciones'],
+    rows: res.rows.map(r => [r.guia, r.remps.join(' → '), r.trans, r.idBodega, r.categoria, r.ciudadDestino, r.estadoBodega, r.fechaNotif, r.fechaRecep, r.fechaDevolucion, r.obs]), texto: [0, 1, 3], fechas: [7, 8, 9] };
 }
 
 // ── GUÍAS RECHAZADAS EN BODEGA ──────────────────────────────
@@ -1219,8 +1237,7 @@ function exportarDatosExcel(filtros, tokenSesion) {
       if (!coincideFiltros_(u, r, f, fd)) continue;
       filas.push([f_(r[COL.FECHA_SOL]), r[COL.TRANSPORTADORA], f_(r[COL.GUIA]), f_(r[COL.GUIA_REMP]), r[COL.INTENTO] || 1, f_(r[COL.FECHA_CAP]), r[COL.TIPO_NOV], bodegaReal_(r[COL.ID_BODEGA]), r[COL.ESTATUS_DROPI], estadoDe_(r), u.rol === R.TRANS ? '' : r[COL.EMAIL_PROV], r[COL.CIUDAD], r[COL.DEPTO], r[COL.DIR_NUEVA], u.rol === R.TRANS ? '' : f_(r[COL.TEL_PROV]), r[COL.OBS_DROPI], f_(r[COL.FECHA_SOL_DROPI]), r[COL.ASESOR_GEST], r[COL.CIUDAD_DESTINO], estadoBodegaDe_(r), f_(r[COL.FECHA_NOTIF]), f_(r[COL.FECHA_CIERRE])]);
     }
-    const csv = aCSV_(['Fecha novedad', 'Transportadora', 'Guía', 'Guía reemplazatoria', 'Intento', 'Fecha captura (Envía)', 'Tipo novedad', 'ID bodega', 'Estatus Dropi', 'Estado', 'Email proveedor', 'Ciudad', 'Departamento', 'Dirección nueva', 'Teléfono proveedor', 'Observaciones Dropi', 'Fecha solución Dropi', 'Asesor gestión', 'Bodega Dropi destino', 'Estado bodega', 'Fecha notificación', 'Fecha cierre'], filas);
-    return { ok: true, fileData: Utilities.base64Encode(csv, Utilities.Charset.UTF_8), total: filas.length };
+    return { ok: true, nombre: 'Novedades', headers: ['Fecha novedad', 'Transportadora', 'Guía', 'Guía reemplazatoria', 'Intento', 'Fecha captura (Envía)', 'Tipo novedad', 'ID bodega', 'Estatus Dropi', 'Estado', 'Email proveedor', 'Ciudad', 'Departamento', 'Dirección nueva', 'Teléfono proveedor', 'Observaciones Dropi', 'Fecha solución Dropi', 'Asesor gestión', 'Bodega Dropi destino', 'Estado bodega', 'Fecha notificación', 'Fecha cierre'], rows: filas.map(f => f.map(v => v === null || v === undefined ? '' : (v instanceof Date ? fastFormatDate(v) : v))), total: filas.length, texto: [2, 3, 7, 14], fechas: [0, 5, 16, 20, 21] };
   });
 }
 
@@ -1232,7 +1249,8 @@ function getConfigGeneral(tokenSesion) {
     const usuarios = ws.getDataRange().getValues().map((r, i) => ({ rowIndex: i + 1, nombre: txt_(r[0]), email: txt_(r[1]), rol: normRol_(r[2]), transportadora: txt_(r[3]), activo: txt_(r[4]) || 'SI', sede: txt_(r[5]), categorias: txt_(r[6]) }))
       .filter((r, i) => i >= 1 && r.nombre && r.email && r.email.indexOf('@') > 0);
     const p = getParametros_();
-    return { ok: true, usuarios, bodegas: getBodegasDropi_(), parametros: Object.keys(PARAM_DEFAULTS).map(k => ({ clave: k, valor: p[k] })), roles: Object.values(R), iaConfigurada: !!PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY') };
+    const dest = leerDestinatarios_();
+    return { ok: true, destinatarios: Object.keys(dest).map(k => ({ transportadora: dest[k].nombre, para: dest[k].para, cc: dest[k].cc })), usuarios, bodegas: getBodegasDropi_(), parametros: Object.keys(PARAM_DEFAULTS).map(k => ({ clave: k, valor: p[k] })), roles: Object.values(R), iaConfigurada: !!PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY') };
   });
 }
 function getUsuarios(tokenSesion) { const r = getConfigGeneral(tokenSesion); return r.ok ? { ok: true, rows: r.usuarios } : r; }
@@ -1262,12 +1280,14 @@ function guardarUsuario(datos, tokenSesion) {
 function guardarBodegaDropi(datos, tokenSesion) {
   return conLock_(() => {
     const u = exigir_(tokenSesion, 'config');
-    const ws = asegurarHoja_(TABS.BODEGAS, ['Ciudad', 'Dirección', 'Contacto', 'Teléfono', 'Activa (SI/NO)']);
+    const ws = asegurarHoja_(TABS.BODEGAS, ['Ciudad', 'Dirección', 'Contacto', 'Teléfono', 'Activa (SI/NO)', 'Correo bodega']);
     if (!txt_(datos.ciudad)) throw new Error('La ciudad es obligatoria.');
-    const fila = [normTxt_(datos.ciudad), txt_(datos.direccion), txt_(datos.contacto), "'" + txt_(datos.telefono), normTxt_(datos.activa) === 'NO' ? 'NO' : 'SI'];
+    if (ws.getMaxColumns() < 6) ws.insertColumnsAfter(ws.getMaxColumns(), 6 - ws.getMaxColumns());
+    if (!txt_(ws.getRange(1, 6).getValue())) ws.getRange(1, 6).setValue('Correo bodega');
+    const fila = [normTxt_(datos.ciudad), txt_(datos.direccion), txt_(datos.contacto), "'" + txt_(datos.telefono), normTxt_(datos.activa) === 'NO' ? 'NO' : 'SI', txt_(datos.correo)];
     let fila_i = parseInt(datos.rowIndex) || 0;
     if (!fila_i) { const ex = ws.getDataRange().getValues().findIndex((r, i) => i > 0 && normTxt_(r[0]) === fila[0]); if (ex > 0) fila_i = ex + 1; }
-    if (fila_i > 1) ws.getRange(fila_i, 1, 1, 5).setValues([fila]); else ws.appendRow(fila);
+    if (fila_i > 1) ws.getRange(fila_i, 1, 1, 6).setValues([fila]); else ws.appendRow(fila);
     clearCache(TABS.BODEGAS);
     registrarLog_(u, 'BODEGA DROPI', fila[0], fila[1]);
     return { ok: true, msg: 'Bodega guardada.' };
@@ -1332,8 +1352,10 @@ function migrarPaso(paso, desde, tokenSesion) {
       return { ok: true, siguiente: 'config', desde: 0, msg: 'Respaldo creado en la pestaña oculta "' + nombre + '".', respaldo: nombre };
     }
     if (paso === 'config') {
-      const wsB = asegurarHoja_(TABS.BODEGAS, ['Ciudad', 'Dirección', 'Contacto', 'Teléfono', 'Activa (SI/NO)']);
-      if (wsB.getLastRow() < 2) wsB.getRange(2, 1, 3, 5).setValues([['BOGOTA', '', '', '', 'SI'], ['CALI', '', '', '', 'SI'], ['MEDELLIN', '', '', '', 'SI']]);
+      const wsB = asegurarHoja_(TABS.BODEGAS, ['Ciudad', 'Dirección', 'Contacto', 'Teléfono', 'Activa (SI/NO)', 'Correo bodega']);
+      if (wsB.getMaxColumns() < 6) wsB.insertColumnsAfter(wsB.getMaxColumns(), 6 - wsB.getMaxColumns());
+      if (!txt_(wsB.getRange(1, 6).getValue())) wsB.getRange(1, 6).setValue('Correo bodega');
+      if (wsB.getLastRow() < 2) wsB.getRange(2, 1, 3, 6).setValues([['BOGOTA', '', '', '', 'SI', ''], ['CALI', '', '', '', 'SI', ''], ['MEDELLIN', '', '', '', 'SI', '']]);
       const wsP = asegurarHoja_(TABS.PARAMETROS, ['Parámetro', 'Valor', 'Descripción']);
       if (wsP.getLastRow() < 2) wsP.getRange(2, 1, 5, 3).setValues([
         ['VALOR_COBRO_MENSUAL', PARAM_DEFAULTS.VALOR_COBRO_MENSUAL, 'Valor mensual de indemnización por guía en Bodega Dropi (aplica a los cobros nuevos)'],
@@ -1579,7 +1601,6 @@ function marcarCobroIndemnizacion(cobroIds, datos, tokenSesion) {
 function exportarIndemnizacionCSV(filtros, tokenSesion) {
   const res = getPanelIndemnizacion(Object.assign({}, filtros || {}, { porPagina: 0, pagina: 1 }), tokenSesion);
   if (!res.ok) return res;
-  const csv = aCSV_(['Guía', 'Guía reemplazatoria', 'ID bodega', 'Transportadora', 'Bodega Dropi', 'Categoría', 'Fecha llegada bodega', 'Meses en bodega', 'Estado guía', 'Fecha devolución', 'Mes cobro', 'Valor', 'Estado de cobro', 'Fecha de cobro'],
-    res.rows.map(r => [r.guia, r.guiaRemp, r.idBod, r.trans, r.ciudad, r.categoria, r.fechaLlegadaBodega, r.mesesEnBodega, r.estadoRec, r.fechaDevolucion, r.mes, r.valor, r.estadoCobro, r.fechaCobro]));
-  return { ok: true, fileData: Utilities.base64Encode(csv, Utilities.Charset.UTF_8) };
+  return { ok: true, nombre: 'Indemnizaciones', headers: ['Guía', 'Guía reemplazatoria', 'ID bodega', 'Transportadora', 'Bodega Dropi', 'Categoría', 'Fecha llegada bodega', 'Meses en bodega', 'Estado guía', 'Fecha devolución', 'Mes cobro', 'Valor', 'Estado de cobro', 'Fecha de cobro'],
+    rows: res.rows.map(r => [r.guia, r.guiaRemp, r.idBod, r.trans, r.ciudad, r.categoria, r.fechaLlegadaBodega, r.mesesEnBodega, r.estadoRec, r.fechaDevolucion, r.mes, r.valor, r.estadoCobro, r.fechaCobro]), texto: [0, 1, 2], fechas: [6, 9, 13], pesos: [11] };
 }

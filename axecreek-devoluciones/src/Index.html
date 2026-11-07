@@ -303,18 +303,29 @@ iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:1
 <!-- ═════════ INGRESO ═════════ -->
 <section class="tab" id="tab-ingreso">
   <div class="card filters">
-    <label class="fld">Transportadora<select class="sel" id="iTrans"></select></label>
+    <label class="fld">Transportadora<select class="sel" id="iTrans" onchange="renderManual()"></select></label>
     <label class="fld">Fecha de solicitud<input type="date" class="inp" id="iFecha"></label>
     <div class="small muted" style="align-self:center">¿Ya tiene solución? <a href="#" onclick="irTab('buscador');return false">Búsquela antes de subir</a>.</div>
   </div>
+  <div class="card">
+    <div class="card-h"><h3><i class="fas fa-keyboard" style="color:var(--brand)"></i> Escribir las guías a mano</h3><div class="r small muted">Una fila por guía · también puede pegar varias celdas desde Excel</div><div class="r"><button class="btn btn-sm" onclick="agregarFilasManual(10)"><i class="fas fa-plus"></i> 10 filas</button><button class="btn btn-sm" onclick="limpiarManual()"><i class="fas fa-eraser"></i> Limpiar</button><button class="btn btn-p btn-sm" onclick="revisarManual()"><i class="fas fa-list-check"></i> Revisar y guardar</button></div></div>
+    <div class="filters" style="border-bottom:1px solid var(--line);background:#FCFCFD">
+      <span class="small" style="font-weight:700;align-self:center">Llenar en todas las filas vacías:</span>
+      <label class="fld">Tipo de novedad<input class="inp" id="mmTipo" style="width:220px"></label>
+      <label class="fld">Estado transportadora<input class="inp" id="mmEstado" style="width:180px"></label>
+      <label class="fld grow">Observación<input class="inp" id="mmObs"></label>
+      <button class="btn" onclick="llenarManual()"><i class="fas fa-fill-drip"></i> Llenar</button>
+    </div>
+    <div class="tblw" style="max-height:480px;overflow:auto"><table class="tbl" id="iManual"></table></div>
+  </div>
   <div class="grid g-3">
     <div class="card p" style="display:flex;flex-direction:column;gap:10px">
-      <span class="stepn">PASO 1</span><b style="font-size:15px">Descargue la plantilla</b>
+      <span class="stepn">O CON PLANTILLA · PASO 1</span><b style="font-size:15px">Descargue la plantilla</b>
       <span class="muted small">Una fila por guía. Así cada dato queda con su guía y nada se corre.</span>
       <button class="btn" onclick="descargarPlantilla()"><i class="fas fa-file-arrow-down"></i> Descargar plantilla Excel</button>
     </div>
     <div class="drop" id="iDrop">
-      <span class="stepn">PASO 2</span><b style="font-size:15px">Suba el Excel o CSV lleno</b>
+      <span class="stepn">PASO 2</span><b style="font-size:15px">Suba la plantilla llena</b>
       <span class="muted small" id="iArchivoTxt">Arrastre el archivo aquí o selecciónelo.</span>
       <input type="file" id="iArchivo" accept=".xlsx,.xls,.csv" class="hidden" onchange="leerArchivoIngreso(this.files[0])">
       <button class="btn btn-p" onclick="document.getElementById('iArchivo').click()"><i class="fas fa-upload"></i> Seleccionar archivo</button>
@@ -411,8 +422,8 @@ iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:1
     <div class="sec-t">Tipo de envío</div>
     <div style="display:flex;flex-wrap:wrap;gap:10px" id="mTipos"></div>
     <div class="filters" style="padding:0">
-      <label class="fld">Transportadora<select class="sel" id="mTrans"></select></label>
-      <label class="fld" id="mBodWrap">Bodega Dropi destino<select class="sel" id="mBod"></select></label>
+      <label class="fld">Transportadora<select class="sel" id="mTrans" onchange="cargarDestinatarios()"></select></label>
+      <label class="fld" id="mBodWrap">Bodega Dropi destino<select class="sel" id="mBod" onchange="infoCopiaBodega()"></select></label>
       <label class="fld">Desde (fecha gestión)<input type="date" class="inp" id="mIni"></label>
       <label class="fld">Hasta<input type="date" class="inp" id="mFin"></label>
       <label class="fld">Depto<input class="inp" id="mDepto" style="width:140px"></label>
@@ -421,6 +432,11 @@ iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:1
     <div class="filters" style="padding:0">
       <label class="fld grow">Para<input class="inp" id="mPara" placeholder="correo@transportadora.com"></label>
       <label class="fld grow">CC<input class="inp" id="mCC" placeholder="Otros correos, separados por coma"></label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="mRecordar" checked> Recordar estos correos para esta transportadora (la próxima vez se llenan solos)</label>
+      <label style="display:flex;gap:8px;align-items:center" id="mCopiaWrap" class="hidden"><input type="checkbox" id="mCopiaBod" checked> <span id="mCopiaTxt"></span></label>
+      <span class="small muted" id="mDestTxt"></span>
     </div>
     <div class="alert info"><i class="fas fa-signature"></i><div>El correo sale con tu nombre como remitente; las respuestas te llegan directo y vas en copia.</div></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" onclick="previaCorreo()"><i class="fas fa-eye"></i> Vista previa</button><button class="btn btn-p" onclick="enviarCorreo()"><i class="fas fa-paper-plane"></i> Enviar correo</button></div>
@@ -574,6 +590,32 @@ function cargando(id, txt) { $(id).innerHTML = `<div class="empty"><i class="fas
 function vacio(txt, ic) { return `<div class="empty"><i class="fas ${ic || 'fa-inbox'}"></i>${esc(txt)}</div>`; }
 function opciones(lista, primera) { return (primera !== undefined ? `<option value="">${esc(primera)}</option>` : '') + lista.map(x => typeof x === 'object' ? `<option value="${esc(x.v)}">${esc(x.t)}</option>` : `<option value="${esc(x)}">${esc(x)}</option>`).join(''); }
 function btnCargando(btn, on, txt) { if (!btn) return; if (on) { btn.dataset.o = btn.innerHTML; btn.disabled = true; btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${esc(txt || 'Procesando…')}`; } else { btn.disabled = false; if (btn.dataset.o) btn.innerHTML = btn.dataset.o; } }
+// Excel con formato: encabezado de color, filtros, primera fila fija, anchos automáticos, fechas y pesos reales.
+async function libroExcel(archivo, hoja, headers, rows, op) {
+  op = op || {};
+  try { await cargarScript(HTTPS + 'cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'); } catch (e) { return toast('No se pudo cargar el generador de Excel', 'bad'); }
+  const texto = new Set(op.texto || []), fechas = new Set(op.fechas || []), pesos = new Set(op.pesos || []);
+  const wb = new ExcelJS.Workbook(); wb.creator = 'Novedades Devoluciones · Dropi'; wb.created = new Date();
+  const ws = wb.addWorksheet(String(hoja || 'Datos').slice(0, 31), { views: [{ state: 'frozen', ySplit: 1 }], properties: { defaultRowHeight: 18 } });
+  const aFecha = v => { const m = String(v || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], 12)) : v; };
+  ws.addRow(headers);
+  rows.forEach(r => ws.addRow(r.map((v, j) => fechas.has(j) ? aFecha(v) : (texto.has(j) ? (v === '' || v === null || v === undefined ? '' : String(v)) : v))));
+  for (let i = 0; i < (op.filasVacias || 0); i++) ws.addRow(headers.map(() => ''));
+  const borde = { style: 'thin', color: { argb: 'FFE5E7EB' } };
+  const h = ws.getRow(1); h.height = 26;
+  h.eachCell(c => { c.font = { bold: true, color: { argb: 'FFFFFFFF' }, name: 'Calibri', size: 11 }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9530A' } }; c.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }; c.border = { bottom: { style: 'medium', color: { argb: 'FF9A3412' } } }; });
+  headers.forEach((t, j) => {
+    const col = ws.getColumn(j + 1); let ancho = String(t).length;
+    rows.slice(0, 400).forEach(r => { const L = String(r[j] === null || r[j] === undefined ? '' : r[j]).length; if (L > ancho) ancho = L; });
+    col.width = Math.min(Math.max(ancho + 3, 12), 55);
+    if (texto.has(j)) col.numFmt = '@'; if (fechas.has(j)) col.numFmt = 'dd/mm/yyyy'; if (pesos.has(j)) col.numFmt = '"$"#,##0';
+  });
+  ws.eachRow((row, n) => { if (n === 1) return; row.eachCell({ includeEmpty: true }, c => { c.border = { bottom: borde }; c.alignment = { vertical: 'top', wrapText: false }; if (n % 2 === 0) c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } }; }); });
+  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
+  if (op.nota) { const wi = wb.addWorksheet('Instrucciones'); wi.getColumn(1).width = 90; wi.addRow([op.nota]).font = { bold: true }; wi.addRow(['No cambie los nombres de las columnas. Los números de guía se guardan como texto, así no se pierden los ceros iniciales.']); }
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })); a.download = archivo + '.xlsx'; document.body.appendChild(a); a.click(); a.remove();
+}
 function descargarB64(b64, nombre, tipo) { const bin = atob(b64); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([arr], { type: tipo || 'text/csv;charset=utf-8' })); a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); }
 function abrirDrawer(html) { $('drawer').innerHTML = html; $('drawer').classList.add('on'); $('scrim').classList.add('on'); }
 function abrirModal(html) { $('modal').innerHTML = html; $('modal').classList.add('on'); $('scrim').classList.add('on'); }
@@ -665,7 +707,7 @@ function irTab(t) {
 }
 function recargarTab() {
   const t = S.tab;
-  ({ dashboard: () => { cargarDash(); cargarRendimiento(); }, gestion: () => cargarGestion(S.gest.pagina || 1), comercial: () => cargarComercial(1), whatsapp: cargarWsp, correos: initCorreos, bodega: () => cargarBodega(S.bod.pagina || 1), rechazos: cargarRechazos, indemnizacion: () => cargarIndem(1), config: cargarConfig, buscador: initBuscador, ingreso: () => {}, cruce: () => {} }[t] || (() => {}))();
+  ({ dashboard: () => { cargarDash(); cargarRendimiento(); }, gestion: () => cargarGestion(S.gest.pagina || 1), comercial: () => cargarComercial(1), whatsapp: cargarWsp, correos: initCorreos, bodega: () => cargarBodega(S.bod.pagina || 1), rechazos: cargarRechazos, indemnizacion: () => cargarIndem(1), config: cargarConfig, buscador: initBuscador, ingreso: renderManual, cruce: () => {} }[t] || (() => {}))();
   if (staff() && t !== 'rechazos') gs('getRechazosBodega', { estado: 'Por resolver' }).then(r => { const c = $('cntRech'); if (c && r.ok) { c.textContent = r.porResolver; c.classList.toggle('hidden', !r.porResolver); } }).catch(() => {});
 }
 
@@ -722,15 +764,38 @@ function cargarRendimiento() {
 const ING_COLS = [['GUIA', 'guia'], ['GUIA REEMPLAZATORIA', 'guiaRemp'], ['TIPO NOVEDAD', 'tipoNov'], ['ESTADO TRANSPORTADORA', 'estadoTrans'], ['OBSERVACIONES', 'obsTrans'], ['CUENTA', 'cuenta'], ['FECHA CAPTURA', 'fechaCap'], ['ID INTERRAPIDISIMO', 'idInter'], ['BODEGA INTERRAPIDISIMO', 'bodInter']];
 const normH = s => String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim();
 function colsPlantilla(trans) { const n = normH(trans); let c = ['GUIA', 'GUIA REEMPLAZATORIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES']; if (n === 'ENVIA') c = c.concat(['CUENTA', 'FECHA CAPTURA']); if (n === 'INTERRAPIDISIMO') c = c.concat(['ID INTERRAPIDISIMO', 'BODEGA INTERRAPIDISIMO']); return c; }
-function descargarPlantilla() {
+async function descargarPlantilla() {
   const tr = $('iTrans').value; if (!tr) return toast('Primero elige la transportadora', 'warn');
-  const cols = colsPlantilla(tr); const ws = XLSX.utils.aoa_to_sheet([cols]);
-  ws['!cols'] = cols.map(() => ({ wch: 24 }));
-  for (let r = 1; r <= 3000; r++) ['A', 'B'].forEach(c => { ws[c + (r + 1)] = { t: 's', v: '', z: '@' }; });
-  ws['!ref'] = 'A1:' + String.fromCharCode(64 + cols.length) + '3001';
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Novedades');
-  XLSX.writeFile(wb, 'Plantilla_Novedades_' + tr.replace(/\s+/g, '_') + '.xlsx');
+  const cols = colsPlantilla(tr);
+  await libroExcel('Plantilla_Novedades_' + tr.replace(/\s+/g, '_'), 'Novedades', cols, [], { texto: cols.map((c, i) => i), filasVacias: 2000, nota: 'Una fila por guía. GUIA y TIPO NOVEDAD son obligatorios.' });
 }
+S.manual = [];
+const ING_KEY = Object.fromEntries(ING_COLS.map(c => [c[0], c[1]]));
+const ING_TIT = { GUIA: 'Guía *', 'GUIA REEMPLAZATORIA': 'Guía reemplazatoria', 'TIPO NOVEDAD': 'Tipo de novedad *', 'ESTADO TRANSPORTADORA': 'Estado transportadora', OBSERVACIONES: 'Observaciones', CUENTA: 'Cuenta', 'FECHA CAPTURA': 'Fecha captura', 'ID INTERRAPIDISIMO': 'ID Interrapidísimo', 'BODEGA INTERRAPIDISIMO': 'Bodega Interrapidísimo' };
+function colsManual() { return colsPlantilla($('iTrans').value || '').map(c => ING_KEY[c]); }
+function renderManual() {
+  if (!S.manual.length) agregarFilasManual(10, true);
+  const cols = colsPlantilla($('iTrans').value || '');
+  $('iManual').innerHTML = `<thead><tr><th>#</th>${cols.map(c => `<th>${esc(ING_TIT[c] || c)}</th>`).join('')}<th></th></tr></thead><tbody>${S.manual.map((f, r) => `<tr><td class="muted">${r + 1}</td>${cols.map((c, k) => `<td style="padding:4px 6px"><input class="inp mi" style="height:34px;min-width:${k < 2 ? 150 : 140}px" data-r="${r}" data-k="${ING_KEY[c]}" value="${esc(f[ING_KEY[c]] || '')}"></td>`).join('')}<td><button class="btn btn-sm btn-ic" aria-label="Quitar fila" onclick="S.manual.splice(${r},1);renderManual()"><i class="fas fa-xmark"></i></button></td></tr>`).join('')}</tbody>`;
+}
+function agregarFilasManual(n, sinPintar) { for (let i = 0; i < n; i++) S.manual.push({}); if (!sinPintar) renderManual(); }
+function limpiarManual() { S.manual = []; renderManual(); }
+function llenarManual() { const v = { tipoNov: $('mmTipo').value.trim(), estadoTrans: $('mmEstado').value.trim(), obsTrans: $('mmObs').value.trim() }; S.manual.forEach(f => { if (!String(f.guia || '').trim()) return; Object.keys(v).forEach(k => { if (v[k] && !String(f[k] || '').trim()) f[k] = v[k]; }); }); renderManual(); }
+function revisarManual() {
+  if (!$('iTrans').value) return toast('Primero elige la transportadora', 'warn');
+  const filas = S.manual.filter(f => String(f.guia || '').trim()).map(f => Object.assign({}, f));
+  if (!filas.length) return toast('Escribe al menos una guía', 'warn');
+  validarIngresoUI(filas);
+}
+document.addEventListener('input', e => { const t = e.target; if (t.classList && t.classList.contains('mi')) { S.manual[+t.dataset.r][t.dataset.k] = t.value; } });
+document.addEventListener('paste', e => {
+  const t = e.target; if (!t.classList || !t.classList.contains('mi')) return;
+  const txt = (e.clipboardData || window.clipboardData).getData('text'); if (!/[\t\n]/.test(txt.trim())) return;
+  e.preventDefault();
+  const cols = colsManual(), r0 = +t.dataset.r, k0 = cols.indexOf(t.dataset.k);
+  txt.replace(/\r/g, '').replace(/\n$/, '').split('\n').forEach((linea, i) => { while (S.manual.length <= r0 + i) S.manual.push({}); linea.split('\t').forEach((v, j) => { const k = cols[k0 + j]; if (k) S.manual[r0 + i][k] = v.trim(); }); });
+  renderManual(); toast('Celdas pegadas', 'ok');
+});
 function filasDesdeMatriz(m) {
   const hi = m.findIndex(r => r.some(c => normH(c) === 'GUIA'));
   if (hi < 0) throw new Error('No encontré la columna GUIA. Use la plantilla.');
@@ -853,25 +918,39 @@ function pintarBulk() {
   const n = S.gest.sel.size, b = $('gBulk');
   if (!n) { b.classList.add('hidden'); return; }
   b.classList.remove('hidden');
-  if (S.u.rol === 'Transportadora') { b.innerHTML = `<b>${n} seleccionada(s)</b><button class="btn btn-ok btn-sm" onclick="confirmarEntregasUI()"><i class="fas fa-check-double"></i> Confirmar: entregadas al proveedor</button><button class="btn btn-sm" style="margin-left:auto" onclick="S.gest.sel.clear();cargarGestion(S.gest.pagina)">Quitar selección</button>`; return; }
+  const enNotif = S.gest.bandeja === E.SOL_NOTIF;
+  if (S.u.rol === 'Transportadora') { b.innerHTML = `<b>${n} seleccionada(s)</b>${enNotif ? `<button class="btn btn-ok btn-sm" onclick="confirmarEntregasUI()"><i class="fas fa-check-double"></i> Confirmar: entregadas al proveedor</button>` : '<span class="small" style="opacity:.8">Para confirmar entregas abra la bandeja "Por confirmar entrega".</span>'}<button class="btn btn-sm" style="margin-left:auto" onclick="S.gest.sel.clear();cargarGestion(S.gest.pagina)">Quitar selección</button>`; return; }
+  b.innerHTML = `<b>${n} seleccionada(s)</b><button class="btn btn-p btn-sm" onclick="abrirMasivo()"><i class="fas fa-pen-to-square"></i> Gestionar seleccionadas</button>${enNotif ? `<button class="btn btn-ok btn-sm" onclick="confirmarEntregasUI()"><i class="fas fa-check-double"></i> Confirmar entregadas</button>` : ''}<button class="btn btn-sm" style="margin-left:auto" onclick="pegarListaUI()"><i class="fas fa-paste"></i> Pegar lista de guías</button><button class="btn btn-sm" onclick="S.gest.sel.clear();cargarGestion(S.gest.pagina)">Quitar</button>`;
+}
+function abrirMasivo() {
   const ests = [E.GEST_LOG, E.GEST_COM, E.SOL_LISTA, E.BOD_LISTA, E.RECH_LISTA, E.PENDIENTE];
-  b.innerHTML = `<b>${n} seleccionada(s)</b><select class="sel" id="bkEstado" onchange="bulkCampos()">${opciones(ests, 'Cambiar estado a…')}</select><span id="bkExtra" style="display:contents"></span><button class="btn btn-p btn-sm" onclick="aplicarBulk()">Aplicar</button><button class="btn btn-ok btn-sm" onclick="confirmarEntregasUI()"><i class="fas fa-check-double"></i> Confirmar entregadas</button><button class="btn btn-sm" style="margin-left:auto" onclick="pegarListaUI()"><i class="fas fa-paste"></i> Pegar lista de guías</button><button class="btn btn-sm" onclick="S.gest.sel.clear();cargarGestion(S.gest.pagina)">Quitar</button>`;
+  abrirModal(`<div class="drawer-h"><div style="flex:1"><div class="small muted">Gestión masiva</div><h3>${S.gest.sel.size} guía(s) seleccionada(s)</h3></div><button class="btn btn-ic btn-sm" aria-label="Cerrar" onclick="cerrarCapas()"><i class="fas fa-xmark"></i></button></div><div class="drawer-b"><label class="fld">Nuevo estado<select class="sel" id="bkEstado" onchange="bulkCampos()">${opciones(ests, 'Seleccionar…')}</select></label><div id="bkExtra" style="display:flex;flex-direction:column;gap:12px"></div><div class="alert info small"><i class="fas fa-circle-info"></i><div>Solo se cambian los campos que llene. Los que deje vacíos conservan el dato que ya tiene cada guía.</div></div></div><div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" id="btnMasivo" onclick="aplicarBulk()">Aplicar a ${S.gest.sel.size} guía(s)</button></div>`);
 }
 function bulkCampos() {
   const e = $('bkEstado').value; let h = '';
-  if (e === E.BOD_LISTA) h = `<select class="sel" id="bkCiudad">${opciones(S.ini.bodegasDropi.map(b => ({ v: b.ciudad, t: 'Bodega ' + b.ciudad })), 'Bodega destino…')}</select>`;
-  if (e === E.SOL_LISTA) h = `<input class="inp" id="bkDir" placeholder="Dirección nueva (si no la tienen)" style="width:240px">`;
-  if ([E.GEST_COM, E.RECH_LISTA, E.GEST_LOG].indexOf(e) >= 0) h = `<input class="inp" id="bkObs" placeholder="Observación" style="width:220px">`;
+  const obs = `<label class="fld">Observación Dropi<textarea class="inp" id="bkObs" rows="3"></textarea></label>`;
+  if (e === E.SOL_LISTA) h = `<label class="fld">Dirección nueva<input class="inp" id="bkDir" placeholder="Obligatoria si la guía no la tiene"></label><div class="form2"><label class="fld">Ciudad<input class="inp" id="bkCiudadP"></label><label class="fld">Departamento<input class="inp" id="bkDepto"></label><label class="fld">Teléfono proveedor<input class="inp" id="bkTel"></label><label class="fld">Teléfono tienda<input class="inp" id="bkTienda"></label></div>` + obs;
+  else if (e === E.BOD_LISTA) h = `<label class="fld">Bodega Dropi destino<select class="sel" id="bkCiudad">${opciones(S.ini.bodegasDropi.map(b => ({ v: b.ciudad, t: 'Bodega ' + b.ciudad + (b.direccion ? ' · ' + b.direccion : '') })), 'Seleccionar…')}</select></label><span class="small muted">La dirección de la bodega se pone sola en "Dirección nueva".</span>` + obs;
+  else if (e) h = obs;
   $('bkExtra').innerHTML = h;
 }
 function aplicarBulk() {
-  const e = $('bkEstado').value; if (!e) return toast('Elige el estado', 'warn');
-  const d = { estado: e }; if ($('bkCiudad')) d.ciudadDestino = $('bkCiudad').value; if ($('bkDir') && $('bkDir').value.trim()) d.dirNueva = $('bkDir').value.trim(); if ($('bkObs') && $('bkObs').value.trim()) d.obsDropi = $('bkObs').value.trim();
-  if (e === E.BOD_LISTA && !d.ciudadDestino) return toast('Elige la bodega destino', 'warn');
-  gs('guardarSolucion', [...S.gest.sel], d).then(r => { toast(r.msg + (r.errores && r.errores.length ? ' ' + r.errores.slice(0, 3).map(x => (x.guia || x.fila) + ': ' + x.motivo).join(' · ') : ''), r.ok ? 'ok' : 'bad'); if (r.ok) cargarGestion(S.gest.pagina); });
+  const e = $('bkEstado').value; if (!e) return toast('Elige el nuevo estado', 'warn');
+  const v = id => $(id) ? $(id).value.trim() : '';
+  const d = { estado: e };
+  [['bkCiudad', 'ciudadDestino'], ['bkDir', 'dirNueva'], ['bkObs', 'obsDropi'], ['bkCiudadP', 'ciudad'], ['bkDepto', 'depto'], ['bkTel', 'telProv'], ['bkTienda', 'telTienda']].forEach(([id, k]) => { if (v(id)) d[k] = v(id); });
+  if (e === E.BOD_LISTA && !d.ciudadDestino) return toast('Elige la Bodega Dropi destino', 'warn');
+  const filas = [...S.gest.sel]; const b = $('btnMasivo'); btnCargando(b, true, 'Aplicando…');
+  gs('guardarSolucion', filas, d).then(r => {
+    btnCargando(b, false);
+    const err = r.errores || [];
+    abrirModal(`<div class="drawer-h"><h3>${r.ok ? 'Listo' : 'No se aplicó'}</h3></div><div class="drawer-b"><div class="alert ${r.ok ? 'ok' : 'bad'}"><i class="fas ${r.ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i><div><b>${num(r.actualizadas || 0)} guía(s) actualizada(s)</b> a "${esc(e)}".${err.length ? ' ' + num(err.length) + ' no se pudieron:' : ''}${r.ok || err.length ? '' : '<br>' + esc(r.msg)}</div></div>${err.length ? `<div class="tblw" style="max-height:300px;overflow:auto"><table class="tbl"><thead><tr><th>Guía</th><th>Motivo</th></tr></thead><tbody>${err.map(x => `<tr><td class="g">${esc(x.guia || 'Fila ' + x.fila)}</td><td>${esc(x.motivo)}</td></tr>`).join('')}</tbody></table></div>` : ''}</div><div class="drawer-f"><button class="btn btn-p" onclick="cerrarCapas()">Entendido</button></div>`);
+    if (r.ok) { S.gest.sel.clear(); cargarGestion(S.gest.pagina); }
+  }).catch(() => btnCargando(b, false));
 }
 function confirmarEntregasUI() {
-  confirmar('Confirmar entregas', `¿La transportadora confirmó que estas <b>${S.gest.sel.size}</b> guías fueron entregadas al proveedor? Pasarán a "${E.CULM_ENT}". Solo aplica a guías en "Solución notificada".`, 'Sí, culminar').then(ok => { if (!ok) return; gs('confirmarEntregas', [...S.gest.sel]).then(r => { toast(r.msg, r.ok ? 'ok' : 'warn'); cargarGestion(S.gest.pagina); }); });
+  const n = S.gest.sel.size;
+  confirmar('Confirmar entregas al proveedor', `Va a culminar <b>${n}</b> guía(s) como "${E.CULM_ENT}".<br><br>Hágalo solo si <b>la transportadora confirmó por escrito</b> que fueron entregadas. Solo aplica a guías en "Solución notificada"; las demás se ignoran.`, 'Sí, la transportadora lo confirmó').then(ok => { if (!ok) return; gs('confirmarEntregas', [...S.gest.sel]).then(r => { toast(r.msg, r.ok ? 'ok' : 'warn'); S.gest.sel.clear(); cargarGestion(S.gest.pagina); }); });
 }
 function pegarListaUI() {
   abrirModal(`<div class="drawer-h"><h3>Pegar lista de guías</h3></div><div class="drawer-b"><p class="small muted">Pegue las guías (por ejemplo, las que la transportadora confirmó en su correo). Se mostrarán para que las seleccione todas.</p><textarea class="inp" id="plTxt" rows="10"></textarea></div><div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" onclick="aplicarListaPegada()">Buscar guías</button></div>`);
@@ -882,7 +961,7 @@ function usarSolucionPrevia(gi) {
   const filas = g.guias.map(x => x.row);
   confirmar('Usar la solución anterior', `Se aplicará a las <b>${filas.length}</b> guías de la bodega ${esc(g.bodega)}:<br><br><b>Dirección:</b> ${esc(sp.dirNueva)}<br><b>Observación:</b> ${esc(sp.obs || '—')}<br><br>Quedarán en "${E.SOL_LISTA}".`, 'Aplicar').then(ok => { if (!ok) return; gs('guardarSolucion', filas, { estado: E.SOL_LISTA, dirNueva: sp.dirNueva, obsDropi: sp.obs || ('Misma solución del ' + sp.fecha) }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); cargarGestion(S.gest.pagina); }); });
 }
-function exportarGestion() { toast('Generando Excel…'); gs('exportarDatosExcel', filtrosGestion()).then(r => { if (!r.ok) return toast(r.msg, 'bad'); descargarB64(r.fileData, 'Novedades_' + hoyISO() + '.csv'); toast(num(r.total) + ' filas exportadas', 'ok'); }); }
+function exportarGestion() { toast('Generando Excel…'); gs('exportarDatosExcel', filtrosGestion()).then(r => { if (!r.ok) return toast(r.msg, 'bad'); libroExcel('Novedades_' + hoyISO(), r.nombre, r.headers, r.rows, r).then(() => toast(num(r.total) + ' filas exportadas', 'ok')); }); }
 
 // ── Ficha de guía ──
 function abrirFicha(row) {
@@ -925,12 +1004,14 @@ function cargarComercial(p) {
 function waNum(t) { const n = String(t || '').replace(/\D/g, ''); return n.startsWith('57') ? n : '57' + n; }
 function gestionComercial(gi) {
   const g = S.gest.data.gruposArray[gi]; const filas = g.guias.map(x => x.row);
-  abrirDrawer(`<div class="drawer-h"><div style="flex:1"><div class="small muted">${esc(g.guias[0].categoria)} · ${g.guias.length} guías</div><h3>Bodega ${esc(g.bodega)}</h3></div><button class="btn btn-ic btn-sm" aria-label="Cerrar" onclick="cerrarCapas()"><i class="fas fa-xmark"></i></button></div> <div class="drawer-b"><div class="card p small" style="background:#F8F9FB;display:flex;flex-direction:column;gap:4px"><span><b>Teléfono:</b> ${esc(g.guias[0].telProv || '—')}</span><span><b>Tienda:</b> ${esc(g.guias[0].telTienda || '—')}</span><span><b>Nota de Gestión:</b> ${esc(g.guias[0].obsDropi || '—')}</span></div> <div class="sec-t">Resultado del contacto</div> <div style="display:flex;flex-direction:column;gap:8px"><label class="radio-card on" id="rcSi" onclick="rcSel(true)"><input type="radio" name="rc" checked><span><b>Se logró contacto: hay solución</b>Pasa a "${E.SOL_LISTA}"</span></label><label class="radio-card" id="rcNo" onclick="rcSel(false)"><input type="radio" name="rc"><span><b>No se logró contacto</b>Vuelve a Gestión como "${E.COM_SIN}" para enviarla a Bodega Dropi</span></label></div> <label class="fld" id="kDirWrap">Dirección nueva<input class="inp" id="kDir" placeholder="Dirección que confirma el proveedor"></label> <label class="fld">Observación<textarea class="inp" id="kObs" rows="3"></textarea></label></div> <div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" id="btnCom" onclick="guardarComercial([${filas.join(',')}])">Guardar</button></div>`);
+  abrirDrawer(`<div class="drawer-h"><div style="flex:1"><div class="small muted">${esc(g.guias[0].categoria)} · ${g.guias.length} guías</div><h3>Bodega ${esc(g.bodega)}</h3></div><button class="btn btn-ic btn-sm" aria-label="Cerrar" onclick="cerrarCapas()"><i class="fas fa-xmark"></i></button></div> <div class="drawer-b"><div class="card p small" style="background:#F8F9FB;display:flex;flex-direction:column;gap:4px"><span><b>Teléfono:</b> ${esc(g.guias[0].telProv || '—')}</span><span><b>Tienda:</b> ${esc(g.guias[0].telTienda || '—')}</span><span><b>Nota de Gestión:</b> ${esc(g.guias[0].obsDropi || '—')}</span></div> <div class="sec-t">Resultado del contacto</div> <div style="display:flex;flex-direction:column;gap:8px"><label class="radio-card on" id="rcSi" onclick="rcSel(true)"><input type="radio" name="rc" checked><span><b>Se logró contacto: hay solución</b>Pasa a "${E.SOL_LISTA}"</span></label><label class="radio-card" id="rcNo" onclick="rcSel(false)"><input type="radio" name="rc"><span><b>No se logró contacto</b>Vuelve a Gestión como "${E.COM_SIN}" para enviarla a Bodega Dropi</span></label></div> <div id="kDirWrap" style="display:flex;flex-direction:column;gap:12px"><label class="fld">Dirección nueva<input class="inp" id="kDir" placeholder="Dirección que confirma el proveedor"></label><div class="form2"><label class="fld">Ciudad<input class="inp" id="kCiudad" value="${esc(g.guias[0].ciudad)}"></label><label class="fld">Departamento<input class="inp" id="kDepto" value="${esc(g.guias[0].depto)}"></label></div></div><div class="form2"><label class="fld">Teléfono / celular proveedor<input class="inp" id="kTel" value="${esc(g.guias[0].telProv)}"></label><label class="fld">Teléfono tienda<input class="inp" id="kTienda" value="${esc(g.guias[0].telTienda)}"></label></div> <label class="fld">Observación<textarea class="inp" id="kObs" rows="3"></textarea></label></div> <div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" id="btnCom" onclick="guardarComercial([${filas.join(',')}])">Guardar</button></div>`);
   S.kSi = true;
 }
 function rcSel(si) { S.kSi = si; $('rcSi').classList.toggle('on', si); $('rcNo').classList.toggle('on', !si); $('kDirWrap').classList.toggle('hidden', !si); }
 function guardarComercial(filas) {
-  const d = S.kSi ? { estado: E.SOL_LISTA, dirNueva: $('kDir').value.trim(), obsDropi: $('kObs').value.trim() } : { estado: E.COM_SIN, obsDropi: $('kObs').value.trim() };
+  const v = id => $(id).value.trim();
+  const d = S.kSi ? { estado: E.SOL_LISTA, dirNueva: v('kDir'), obsDropi: v('kObs'), ciudad: v('kCiudad'), depto: v('kDepto') } : { estado: E.COM_SIN, obsDropi: v('kObs') };
+  if (v('kTel')) d.telProv = v('kTel'); if (v('kTienda')) d.telTienda = v('kTienda');
   if (S.kSi && !d.dirNueva) return toast('Escribe la dirección nueva', 'warn'); if (!S.kSi && !d.obsDropi) return toast('Cuenta por qué no hubo contacto', 'warn');
   const b = $('btnCom'); btnCargando(b, true);
   gs('guardarSolucion', filas, d).then(r => { btnCargando(b, false); toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { cerrarCapas(); cargarComercial(1); } });
@@ -965,8 +1046,13 @@ function enviarCRM(i) { const x = S.wsp.data.wspArray[i]; gs('enviarWspCRM', { i
 //  CORREOS
 // ════════════════════════════════════════════════════════════
 const M_TIPOS = [['solucion', 'Soluciones', 'Guías en "Solución lista - por notificar"'], ['bodega', 'Envío a Bodega Dropi', 'Guías en "Para Bodega Dropi - por notificar"'], ['rechazada', 'Rechazadas', 'Guías en "Rechazada - por notificar"']];
-function initCorreos() { if (!S.mTipo) S.mTipo = 'solucion'; $('mTipos').innerHTML = M_TIPOS.map(t => `<label class="radio-card ${S.mTipo === t[0] ? 'on' : ''}" onclick="S.mTipo='${t[0]}';initCorreos()"><input type="radio" name="mt" ${S.mTipo === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><span class="muted">${t[2]}</span></span></label>`).join(''); $('mBodWrap').classList.toggle('hidden', S.mTipo !== 'bodega'); }
-function payloadCorreo() { return { tipoEnvio: S.mTipo, transportadora: $('mTrans').value, ciudadBodega: $('mBod').value, fechaInicio: $('mIni').value, fechaFin: $('mFin').value, depto: $('mDepto').value, ciudad: $('mCiudad').value, para: $('mPara').value.trim(), cc: $('mCC').value.trim() }; }
+function initCorreos() { if (!S.mTipo) S.mTipo = 'solucion'; $('mTipos').innerHTML = M_TIPOS.map(t => `<label class="radio-card ${S.mTipo === t[0] ? 'on' : ''}" onclick="S.mTipo='${t[0]}';initCorreos()"><input type="radio" name="mt" ${S.mTipo === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><span class="muted">${t[2]}</span></span></label>`).join(''); $('mBodWrap').classList.toggle('hidden', S.mTipo !== 'bodega'); infoCopiaBodega(); }
+function cargarDestinatarios() {
+  const t = $('mTrans').value; if (!t) return;
+  gs('getDestinatariosCorreo', t).then(r => { if (!r.ok) return; $('mPara').value = r.para || ''; $('mCC').value = r.cc || ''; $('mDestTxt').textContent = r.para ? 'Correos guardados para ' + t + '. Si los cambia, se actualizan al enviar.' : 'Aún no hay correos guardados para ' + t + '.'; });
+}
+function infoCopiaBodega() { const b = S.ini && S.ini.bodegasDropi.find(x => x.ciudad === $('mBod').value); const on = S.mTipo === 'bodega' && b && b.correo; $('mCopiaWrap').classList.toggle('hidden', !on); if (on) $('mCopiaTxt').textContent = 'Enviar copia a la Bodega Dropi ' + b.ciudad + ' (' + b.correo + ')'; }
+function payloadCorreo() { return { tipoEnvio: S.mTipo, transportadora: $('mTrans').value, ciudadBodega: $('mBod').value, fechaInicio: $('mIni').value, fechaFin: $('mFin').value, depto: $('mDepto').value, ciudad: $('mCiudad').value, para: $('mPara').value.trim(), cc: $('mCC').value.trim(), recordar: $('mRecordar').checked, copiarBodega: $('mCopiaBod').checked }; }
 function previaCorreo() {
   const p = payloadCorreo(); if (!p.transportadora) return toast('Elige la transportadora', 'warn'); if (p.tipoEnvio === 'bodega' && !p.ciudadBodega) return toast('Elige la Bodega Dropi destino', 'warn');
   cargando('mPrevia', 'Armando vista previa…');
@@ -1009,7 +1095,7 @@ function accionesBod() {
 }
 function recibirSel() { gs('recibirGuiasBodega', [...S.bod.sel], '').then(r => { toast(r.msg + (r.errores.length ? ' ' + r.errores.slice(0, 2).map(x => (x.guia || '') + ': ' + x.motivo).join(' · ') : ''), r.ok ? 'ok' : 'warn'); cargarBodega(S.bod.pagina); }); }
 function cerrarBod(est) { confirmar(est, `¿Marcar ${S.bod.sel.size} guía(s) como "${esc(est)}"? Se detiene el cobro de indemnización.`, 'Confirmar').then(ok => { if (!ok) return; gs('actualizarEstadoBodega', [...S.bod.sel], { estado: est }).then(r => { toast(r.msg, r.ok ? 'ok' : 'warn'); cargarBodega(S.bod.pagina); }); }); }
-function exportarBodega() { gs('exportarBodegasDropiCSV', { ciudadDestino: $('oCiudad').value, transportadora: $('oTrans').value, estadoRecep: $('oEstado').value }).then(r => { if (r.ok) descargarB64(r.fileData, 'Bodega_Dropi_' + hoyISO() + '.csv'); }); }
+function exportarBodega() { toast('Generando Excel…'); gs('exportarBodegasDropiCSV', { ciudadDestino: $('oCiudad').value, transportadora: $('oTrans').value, estadoRecep: $('oEstado').value, guia: $('oGuia').value, idBodega: $('oIdBod').value, fechaIni: $('oIni').value, fechaFin: $('oFin').value }).then(r => { if (!r.ok) return toast(r.msg, 'bad'); libroExcel('Bodega_Dropi_' + hoyISO(), r.nombre, r.headers, r.rows, r); }); }
 function buscarEnIndice(cod) {
   const c = normCode(cod); if (!c) return null;
   let it = S.bod.indice.get(c) || S.bod.indice.get(sinCeros(c)); if (it) return it;
@@ -1046,7 +1132,7 @@ function vaciarCola() {
 }
 let silTimer = null; function cargarBodegaSilencioso() { clearTimeout(silTimer); silTimer = setTimeout(() => cargarBodega(S.bod.pagina), 1500); }
 $('oScan').addEventListener('keydown', e => { if (e.key === 'Enter' || (e.key === 'Tab' && e.target.value.trim())) { e.preventDefault(); const v = e.target.value; e.target.value = ''; procesarCodigo(v); } });
-document.addEventListener('click', e => { if (S.tab === 'bodega' && !e.target.closest('input,textarea,select,button,a,label,.drawer,.modal')) $('oScan').focus(); });
+document.querySelector('#tab-bodega .scan').addEventListener('click', e => { if (!e.target.closest('button,input') && !String(window.getSelection())) $('oScan').focus(); });
 function revisarMasiva() {
   const cods = $('oMasiva').value.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean); if (!cods.length) return;
   const ok = [], ya = [], no = [];
@@ -1129,7 +1215,7 @@ function selIndem(k) { const c = +k.dataset.c; k.checked ? S.indem.sel.add(c) : 
 function marcarCobro(est) { gs('marcarCobroIndemnizacion', [...S.indem.sel], { estadoCobro: est }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); cargarIndem(S.indem.pagina); }); }
 function detenerCobro(est) { const filas = [...new Set([...document.querySelectorAll('.chkN:checked')].map(k => +k.dataset.r))]; confirmar(est, `Las ${filas.length} guía(s) dejarán de generar cobro desde ahora. ¿Continuar?`, 'Confirmar').then(ok => { if (ok) gs('actualizarEstadoBodega', filas, { estado: est }).then(r => { toast(r.msg, r.ok ? 'ok' : 'warn'); cargarIndem(S.indem.pagina); }); }); }
 function graficaIndem(ev) { if (!window.Chart) return; if (S.charts.i) S.charts.i.destroy(); S.charts.i = new Chart($('chIndem'), { type: 'bar', data: { labels: ev.map(x => x.mes), datasets: [{ label: 'Cobrado', data: ev.map(x => x.cobrado), backgroundColor: '#059669', borderRadius: 6, stack: 's' }, { label: 'Pendiente', data: ev.map(x => x.pendiente), backgroundColor: '#FF7A1A', borderRadius: 6, stack: 's' }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#F1F3F6' } } } } }); }
-function exportarIndem() { gs('exportarIndemnizacionCSV', filtrosIndem(1)).then(r => { if (r.ok) descargarB64(r.fileData, 'Indemnizaciones_' + hoyISO() + '.csv'); }); }
+function exportarIndem() { toast('Generando Excel…'); gs('exportarIndemnizacionCSV', filtrosIndem(1)).then(r => { if (!r.ok) return toast(r.msg, 'bad'); libroExcel('Indemnizaciones_' + hoyISO(), r.nombre, r.headers, r.rows, r); }); }
 function sincronizarIndem() { toast('Sincronizando…'); gs('sincronizarTodoIndemnizacion').then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); cargarIndem(1); }); }
 
 // ════════════════════════════════════════════════════════════
@@ -1139,7 +1225,7 @@ function cargarConfig() {
   cargando('uTabla');
   gs('getConfigGeneral').then(r => {
     if (!r.ok) return toast(r.msg, 'bad'); S.cfg = r; renderUsuarios();
-    $('cfgBodegas').innerHTML = r.bodegas.map((b, i) => `<div class="card p" style="padding:14px;display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><b>${esc(b.ciudad)}</b> ${b.activa ? '' : '<span class="badge" style="background:#F3F4F6;color:#374151">Inactiva</span>'}<div class="small">${esc(b.direccion || 'Sin dirección: agréguela')}</div><div class="small muted">${esc(b.contacto)} ${esc(b.telefono)}</div></div><button class="btn btn-sm" onclick="editarBodega(${i})">Editar</button></div>`).join('');
+    $('cfgBodegas').innerHTML = r.bodegas.map((b, i) => `<div class="card p" style="padding:14px;display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><b>${esc(b.ciudad)}</b> ${b.activa ? '' : '<span class="badge" style="background:#F3F4F6;color:#374151">Inactiva</span>'}<div class="small">${esc(b.direccion || 'Sin dirección: agréguela')}</div><div class="small muted">${esc(b.contacto)} ${esc(b.telefono)}${b.correo ? ' · ' + esc(b.correo) : ''}</div></div><button class="btn btn-sm" onclick="editarBodega(${i})">Editar</button></div>`).join('');
     const desc = { VALOR_COBRO_MENSUAL: 'Valor mensual de indemnización por guía (aplica a los cobros nuevos)', CONTACTO_URGENTE: 'Contacto que ve la bodega cuando una guía NO se debe recibir', LIMITE_WSP_DIA: 'Límite sugerido de WhatsApp por asesor al día', CRM_WEBHOOK_URL: 'URL del CRM para WhatsApp por API (vacío = manual)', MAX_BUSQUEDA: 'Máximo de valores por búsqueda en el buscador' };
     $('cfgParams').innerHTML = r.parametros.map(p => `<label class="fld">${esc(desc[p.clave] || p.clave)}<div style="display:flex;gap:8px"><input class="inp" id="par_${p.clave}" value="${esc(p.valor)}" style="flex:1"><button class="btn" onclick="guardarParam('${p.clave}')">Guardar</button></div></label>`).join('');
     $('cfgGeminiTxt').textContent = r.iaConfigurada ? 'La IA está configurada.' : 'Sin API Key: la IA está desactivada.';
@@ -1159,10 +1245,10 @@ function editarUsuario(rowIndex) {
 function rolCampos() { const r = $('u_rol').value; $('u_transW').classList.toggle('hidden', r !== 'Transportadora'); $('u_sedeW').classList.toggle('hidden', r !== 'Bodega Dropi'); $('u_catW').classList.toggle('hidden', r !== 'Comercial'); $('u_info').innerHTML = { 'Admin': 'Ve y hace todo, incluido dar accesos.', 'Gestión': 'Ve y hace todo, menos dar accesos y configuración.', 'Comercial': 'Solo ve y gestiona las guías que Gestión le pasa, de sus categorías. Puede usar WhatsApp; no envía correos ni reportes.', 'Transportadora': 'Sube novedades, busca soluciones y confirma entregas, solo de su transportadora.', 'Bodega Dropi': 'Solo ve y recibe lo enviado a su ciudad.', 'Indemnizaciones': 'Solo ve el panel de indemnizaciones.' }[r] || ''; }
 function guardarUsuarioUI(rowIndex) { const d = { rowIndex: rowIndex || '', nombre: $('u_nombre').value, email: $('u_email').value, rol: $('u_rol').value, activo: $('u_activo').value, transportadora: $('u_trans').value, sede: $('u_sede').value, categorias: [...document.querySelectorAll('.u_cat:checked')].map(c => c.value).join(', ') }; gs('guardarUsuario', d).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { cerrarCapas(); cargarConfig(); } }); }
 function editarBodega(i) {
-  const b = i === null ? { ciudad: '', direccion: '', contacto: '', telefono: '', activa: true, rowIndex: '' } : S.cfg.bodegas[i];
-  abrirModal(`<div class="drawer-h"><h3>${i === null ? 'Nueva Bodega Dropi' : 'Bodega ' + esc(b.ciudad)}</h3></div><div class="drawer-b"><div class="form2"><label class="fld">Ciudad<input class="inp" id="b_ciudad" value="${esc(b.ciudad)}"></label><label class="fld">Activa<select class="sel" id="b_activa"><option>SI</option><option ${b.activa ? '' : 'selected'}>NO</option></select></label></div><label class="fld">Dirección<input class="inp" id="b_dir" value="${esc(b.direccion)}"></label><div class="form2"><label class="fld">Contacto<input class="inp" id="b_contacto" value="${esc(b.contacto)}"></label><label class="fld">Teléfono<input class="inp" id="b_tel" value="${esc(b.telefono)}"></label></div><span class="small muted">También puede editarlas directo en la pestaña CONFIG_BODEGAS_DROPI de la hoja.</span></div><div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" onclick="guardarBodegaUI(${b.rowIndex || 0})">Guardar</button></div>`);
+  const b = i === null ? { ciudad: '', direccion: '', contacto: '', telefono: '', correo: '', activa: true, rowIndex: '' } : S.cfg.bodegas[i];
+  abrirModal(`<div class="drawer-h"><h3>${i === null ? 'Nueva Bodega Dropi' : 'Bodega ' + esc(b.ciudad)}</h3></div><div class="drawer-b"><div class="form2"><label class="fld">Ciudad<input class="inp" id="b_ciudad" value="${esc(b.ciudad)}"></label><label class="fld">Activa<select class="sel" id="b_activa"><option>SI</option><option ${b.activa ? '' : 'selected'}>NO</option></select></label></div><label class="fld">Dirección<input class="inp" id="b_dir" value="${esc(b.direccion)}"></label><div class="form2"><label class="fld">Contacto<input class="inp" id="b_contacto" value="${esc(b.contacto)}"></label><label class="fld">Teléfono<input class="inp" id="b_tel" value="${esc(b.telefono)}"></label></div><label class="fld">Correo de la bodega (recibe copia de los envíos a esta bodega)<input class="inp" id="b_correo" value="${esc(b.correo || '')}"></label><span class="small muted">También puede editarlas directo en la pestaña CONFIG_BODEGAS_DROPI de la hoja.</span></div><div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" onclick="guardarBodegaUI(${b.rowIndex || 0})">Guardar</button></div>`);
 }
-function guardarBodegaUI(rowIndex) { gs('guardarBodegaDropi', { rowIndex: rowIndex || '', ciudad: $('b_ciudad').value, direccion: $('b_dir').value, contacto: $('b_contacto').value, telefono: $('b_tel').value, activa: $('b_activa').value }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { cerrarCapas(); cargarConfig(); } }); }
+function guardarBodegaUI(rowIndex) { gs('guardarBodegaDropi', { rowIndex: rowIndex || '', ciudad: $('b_ciudad').value, direccion: $('b_dir').value, contacto: $('b_contacto').value, telefono: $('b_tel').value, correo: $('b_correo').value, activa: $('b_activa').value }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { cerrarCapas(); cargarConfig(); } }); }
 function guardarParam(k) { gs('guardarParametro', k, $('par_' + k).value).then(r => toast(r.msg, r.ok ? 'ok' : 'bad')); }
 function guardarGemini() { gs('guardarGeminiKey', $('cfgGemini').value).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); $('cfgGemini').value = ''; }); }
 function repararIndem() { confirmar('Reparar cobros', 'Elimina cobros duplicados y cobros del mes en curso que aún no se cumple. ¿Continuar?', 'Reparar').then(ok => { if (ok) gs('repararIndemnizacion').then(r => toast(r.msg, r.ok ? 'ok' : 'bad')); }); }
