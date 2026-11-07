@@ -538,6 +538,7 @@ iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:1
 // ════════════════════════════════════════════════════════════
 //  NÚCLEO
 // ════════════════════════════════════════════════════════════
+const HTTPS = 'https:' + String.fromCharCode(47, 47); // se arma así porque Google quita todo lo que parezca comentario
 const E = { PENDIENTE:'Pendiente', GEST_LOG:'En gestión logística', GEST_COM:'En gestión comercial', COM_SIN:'Comercial sin contacto', SOL_LISTA:'Solución lista - por notificar', BOD_LISTA:'Para Bodega Dropi - por notificar', RECH_LISTA:'Rechazada - por notificar', SOL_NOTIF:'Solución notificada', BOD_NOTIF:'Bodega Dropi notificada', RECH_NOTIF:'Rechazada notificada', CULM_ENT:'Culminado - entregado al proveedor', CULM_BOD:'Culminado - en Bodega Dropi' };
 const EB = { TRANSITO:'En tránsito a bodega', RECIBIDO:'Recibido en Bodega', RETIRADO:'Retirado por el proveedor', REENVIADO:'Reenviado al proveedor' };
 const COLOR = { [E.PENDIENTE]:['#F3F4F6','#374151','#9CA3AF'], [E.GEST_LOG]:['#EFF6FF','#1E40AF','#2563EB'], [E.GEST_COM]:['#F5F3FF','#5B21B6','#7C3AED'], [E.COM_SIN]:['#FAF5FF','#6B21A8','#A78BFA'], [E.SOL_LISTA]:['#FFFBEB','#92400E','#D97706'], [E.BOD_LISTA]:['#FFF7ED','#9A3412','#F59E0B'], [E.RECH_LISTA]:['#FEF2F2','#991B1B','#F87171'], [E.SOL_NOTIF]:['#ECFEFF','#155E75','#0891B2'], [E.BOD_NOTIF]:['#ECFEFF','#164E63','#0E7490'], [E.RECH_NOTIF]:['#FEF2F2','#7F1D1D','#DC2626'], [E.CULM_ENT]:['#ECFDF5','#065F46','#059669'], [E.CULM_BOD]:['#ECFDF5','#064E3B','#047857'], [EB.TRANSITO]:['#FFF7ED','#9A3412','#F59E0B'], [EB.RECIBIDO]:['#ECFDF5','#065F46','#059669'], [EB.RETIRADO]:['#F3F4F6','#374151','#9CA3AF'], [EB.REENVIADO]:['#F3F4F6','#374151','#9CA3AF'], 'Pendiente de cobro':['#FFF7ED','#9A3412','#F59E0B'], 'Cobrado al proveedor':['#ECFDF5','#065F46','#059669'], 'Por resolver':['#FEF2F2','#991B1B','#DC2626'], 'Vinculada':['#ECFDF5','#065F46','#059669'], 'No recibir':['#F3F4F6','#374151','#9CA3AF'] };
@@ -918,7 +919,7 @@ function cargarComercial(p) {
     if (!r.ok) { $('kLista').innerHTML = ''; return toast(r.msg, 'bad'); }
     S.gest.data = r;
     $('kKpis').innerHTML = `<div class="card kpi hl"><span class="l">Por gestionar</span><span class="v">${num(r.totalGuias)}</span><span class="s">${num(r.totalBodegas)} proveedores</span></div><div class="card kpi"><span class="l">Tus categorías</span><span class="v" style="font-size:16px;margin-top:6px">${esc((S.u.categorias || []).join(', '))}</span></div>`;
-    $('kLista').innerHTML = r.gruposArray.length ? r.gruposArray.map((g, gi) => { const p0 = g.guias[0]; return `<div class="grp"><div class="grp-h"><div><div class="t">Bodega ${esc(g.bodega)}</div><div class="s">${esc(p0.categoria)} · ${esc(p0.ciudad)} · Tel. ${esc(p0.telProv || '—')} · Tienda ${esc(p0.telTienda || '—')}</div></div><div class="r">${p0.telProv ? `<a class="btn btn-sm" target="_blank" href="https://wa.me/${waNum(p0.telProv)}"><i class="fab fa-whatsapp" style="color:#16A34A"></i> WhatsApp</a>` : ''}<button class="btn btn-p btn-sm" onclick="gestionComercial(${gi})">Gestionar proveedor</button></div></div><div class="tblw"><table class="tbl"><thead><tr><th>Guía</th><th>Transportadora</th><th>Tipo novedad</th><th>Nota de Gestión</th><th></th></tr></thead><tbody>${g.guias.map(x => `<tr><td class="g">${esc(x.guia)}</td><td>${esc(x.trans)}</td><td>${esc(x.tipoNov)}</td><td class="small">${esc(x.obsDropi)}</td><td><button class="btn btn-sm" onclick="abrirFicha(${x.row})">Ficha</button></td></tr>`).join('')}</tbody></table></div></div>`; }).join('') + pagerHTML(r, 'cargarComercial') : `<div class="card">${vacio('No tienes guías por gestionar. ¡Todo al día!', 'fa-mug-hot')}</div>`;
+    $('kLista').innerHTML = r.gruposArray.length ? r.gruposArray.map((g, gi) => { const p0 = g.guias[0]; return `<div class="grp"><div class="grp-h"><div><div class="t">Bodega ${esc(g.bodega)}</div><div class="s">${esc(p0.categoria)} · ${esc(p0.ciudad)} · Tel. ${esc(p0.telProv || '—')} · Tienda ${esc(p0.telTienda || '—')}</div></div><div class="r">${p0.telProv ? `<a class="btn btn-sm" target="_blank" href="${HTTPS}wa.me/${waNum(p0.telProv)}"><i class="fab fa-whatsapp" style="color:#16A34A"></i> WhatsApp</a>` : ''}<button class="btn btn-p btn-sm" onclick="gestionComercial(${gi})">Gestionar proveedor</button></div></div><div class="tblw"><table class="tbl"><thead><tr><th>Guía</th><th>Transportadora</th><th>Tipo novedad</th><th>Nota de Gestión</th><th></th></tr></thead><tbody>${g.guias.map(x => `<tr><td class="g">${esc(x.guia)}</td><td>${esc(x.trans)}</td><td>${esc(x.tipoNov)}</td><td class="small">${esc(x.obsDropi)}</td><td><button class="btn btn-sm" onclick="abrirFicha(${x.row})">Ficha</button></td></tr>`).join('')}</tbody></table></div></div>`; }).join('') + pagerHTML(r, 'cargarComercial') : `<div class="card">${vacio('No tienes guías por gestionar. ¡Todo al día!', 'fa-mug-hot')}</div>`;
   });
 }
 function waNum(t) { const n = String(t || '').replace(/\D/g, ''); return n.startsWith('57') ? n : '57' + n; }
@@ -955,7 +956,7 @@ function verWsp(i) {
 }
 function enviarWsp(i) {
   const x = S.wsp.data.wspArray[i]; const msg = $('wMsg').innerText;
-  window.open('https://wa.me/' + waNum(x.tel) + '?text=' + encodeURIComponent(msg), '_blank');
+  window.open(HTTPS + 'wa.me/' + waNum(x.tel) + '?text=' + encodeURIComponent(msg), '_blank');
   gs('registrarEnvioWsp', x.bodega).then(r => { if (!r.ok) return; x.enviado = true; const row = $('wRow' + i); if (row) row.style.opacity = .55; pintarContadorWsp(r.enviadosHoy, r.limite); if (r.aviso) toast(r.aviso, 'warn'); else toast('Marcado como enviado' + (r.movidas ? ` · ${r.movidas} guías pasaron a gestión` : ''), 'ok'); if (i + 1 < S.wsp.data.wspArray.length) verWsp(i + 1); });
 }
 function enviarCRM(i) { const x = S.wsp.data.wspArray[i]; gs('enviarWspCRM', { idBodega: x.bodega, telefono: waNum(x.tel), mensaje: $('wMsg').innerText }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok && i + 1 < S.wsp.data.wspArray.length) verWsp(i + 1); }); }
@@ -1070,7 +1071,7 @@ let cam = null;
 async function abrirCamara() {
   $('camWrap').classList.remove('hidden'); $('camTxt').textContent = 'Iniciando cámara…';
   try {
-    await cargarScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js');
+    await cargarScript(HTTPS + 'unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js');
     cam = new Html5Qrcode('camBox'); let pausa = false;
     await cam.start({ facingMode: 'environment' }, { fps: 12, qrbox: { width: 280, height: 140 } }, txt => { if (pausa) return; pausa = true; setTimeout(() => pausa = false, 1500); procesarCodigo(txt); }, () => {});
     $('camTxt').textContent = 'Cámara activa: apunte al código de barras.';
@@ -1080,9 +1081,9 @@ function cerrarCamara() { if (cam) { cam.stop().catch(() => {}); cam = null; } $
 async function leerFoto(inp) {
   const file = inp.files && inp.files[0]; if (!file) return; inp.value = '';
   resultado('info', 'LEYENDO FOTO…', '…', 'Buscando el código de barras y el número de guía.');
-  try { await cargarScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'); const t = new Html5Qrcode('fotoTmp'); const txt = await t.scanFile(file, false); try { t.clear(); } catch (e) {} if (txt) return procesarCodigo(txt); } catch (e) {}
+  try { await cargarScript(HTTPS + 'unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'); const t = new Html5Qrcode('fotoTmp'); const txt = await t.scanFile(file, false); try { t.clear(); } catch (e) {} if (txt) return procesarCodigo(txt); } catch (e) {}
   try {
-    await cargarScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    await cargarScript(HTTPS + 'cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
     const r = await Tesseract.recognize(file, 'eng', { tessedit_char_whitelist: '0123456789' });
     const nums = ((r.data && r.data.text) || '').match(/\d{8,16}/g) || [];
     const hit = nums.find(n => buscarEnIndice(n)); if (hit || nums[0]) return procesarCodigo(hit || nums[0]);

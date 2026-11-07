@@ -81,6 +81,8 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   ok(js.indexOf('<?') < 0, 'Ningún scriptlet <? ?> dentro del JavaScript');
   const lineasConTpl = js.split('\n').filter(l => (l.match(/`/g) || []).length % 2 === 1).length;
   ok(lineasConTpl === 0, 'Ningún texto con comillas invertidas ocupa varias líneas', lineasConTpl);
+  const codigoSinComentarios = js.split('\n').filter(l => !l.trim().startsWith('//')).map(l => l.replace(/;\s*\/\/ se arma así.*$/, ';')).join('\n');
+  ok(!/\/\/|\/\*/.test(codigoSinComentarios), 'No hay "//" ni "/*" dentro del código (Google los toma como comentario y corta la línea)');
   const browser = await chromium.launch();
   titulo('1. Login con código y dashboard (Admin)');
   let page = await nuevaPagina(browser, '');
