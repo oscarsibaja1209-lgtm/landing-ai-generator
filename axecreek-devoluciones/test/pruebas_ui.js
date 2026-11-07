@@ -164,7 +164,10 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   ok(fm[26] === 'Solución lista - por notificar' && fm[21] === 'PEREIRA' && fm[22] === 'RISARALDA' && String(fm[18]) === '3205556677' && fm[24] === 'Carrera 50 # 10-20', 'Masivo guarda dirección, ciudad, departamento y teléfono en todas las seleccionadas', fm.slice(18, 27).join(' | '));
   ok(selMasivo.every(r => m.hojas.NOVEDADES.filas[r - 1][21] === 'PEREIRA'), 'Las ' + selMasivo.length + ' guías seleccionadas quedaron con la ciudad nueva');
   await page.click('#modal >> text=Entendido');
+  await page.evaluate(() => { window.__enlaces = []; const c = HTMLAnchorElement.prototype.click; HTMLAnchorElement.prototype.click = function () { window.__enlaces.push({ href: this.href.slice(0, 40), target: this.target, download: this.download }); return c.call(this); }; });
   const [descarga] = await Promise.all([page.waitForEvent('download'), page.click('#gFiltros >> text=Exportar')]);
+  const enl = await page.evaluate(() => window.__enlaces[window.__enlaces.length - 1]);
+  ok(enl && enl.href.indexOf('data:') === 0 && enl.target === '_self' && /\.xlsx$/.test(enl.download), 'La descarga usa data: y target _self (compatible con Apps Script)', JSON.stringify(enl));
   const rutaX = path.join(capturas, 'export_gestion.xlsx'); await descarga.saveAs(rutaX);
   const XL = require(path.join(libs, 'node_modules/xlsx'));
   const wbx = XL.readFile(rutaX); const sh = wbx.Sheets[wbx.SheetNames[0]]; const filasX = XL.utils.sheet_to_json(sh, { header: 1 });
@@ -180,6 +183,19 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.selectOption('#iTrans', 'TCC'); ok(await page.isVisible('#mlRemp'), 'TCC sí muestra guías reemplazatorias');
   await page.selectOption('#iTrans', 'Interrapidísimo'); ok(await page.isVisible('#mlRemp') && await page.isVisible('#mlIdInter'), 'Interrapidísimo muestra reemplazatorias y sus campos propios');
   await page.selectOption('#iTrans', 'Veloces'); ok(!(await page.isVisible('#mlRemp')) && !(await page.isVisible('#mlCuenta')), 'Veloces no muestra reemplazatorias ni campos de otras transportadoras');
+  await page.click('#nav-gestion'); await page.waitForSelector('#gBandejas .chip');
+  await page.click('#gBandejas >> text=Notificadas sin confirmar'); await page.waitForSelector('#gLista .grp');
+  await page.click('#gLista .grp >> nth=0 >> text=Ficha'); await page.waitForSelector('#f_estado');
+  const filaN = await page.evaluate(() => S.ficha.ficha.row);
+  ok(await page.inputValue('#f_estado') === 'Solución notificada', 'La ficha muestra el estado actual de la guía (no lo cambia a Pendiente)');
+  await page.fill('#f_obsDropi', 'Nota sin cambiar estado'); await page.click('#btnFicha'); await esperarToast(page, /Guía actualizada/);
+  ok(m.hojas.NOVEDADES.filas[filaN - 1][26] === 'Solución notificada' && m.hojas.NOVEDADES.filas[filaN - 1][25] === 'Nota sin cambiar estado', 'Guardar la ficha sin tocar el estado conserva el estado');
+  // recorrido por todas las secciones del Admin/Gestión sin errores
+  for (const t of ['dashboard', 'ingreso', 'cruce', 'buscador', 'gestion', 'comercial', 'whatsapp', 'correos', 'bodega', 'rechazos', 'indemnizacion']) {
+    await page.click('#nav-' + t); await page.waitForTimeout(700);
+  }
+  const toastsMalos = await page.$$eval('#toast div.bad', d => d.map(x => x.textContent));
+  ok(toastsMalos.length === 0 && page.errores.length === 0, 'Recorrido por las 11 secciones de Gestión sin errores', toastsMalos.concat(page.errores).join(' | '));
   titulo('4. Correos a transportadora');
   await page.click('#nav-correos');
   await page.click('#mTipos >> text=Envío a Bodega Dropi');
