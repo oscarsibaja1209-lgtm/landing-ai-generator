@@ -111,10 +111,10 @@ async function foto(page, nombre, escala) { await page.waitForTimeout(250); awai
   await page.click('text=1. Ver qué va a cambiar');
   await page.waitForSelector('#cfgMigra .list-kv');
   ok(/8\.658/.test(await page.textContent('#cfgMigra')), 'Vista previa muestra 8.658 → Solución notificada');
-  await page.click('text=2. Hacer copia y aplicar');
+  await page.click('text=2. Respaldar y aplicar');
   await page.click('#cfSi');
   await page.waitForSelector('#cfgMigra .alert.ok', { timeout: 20000 });
-  ok(/Respaldo creado/.test(await page.textContent('#cfgMigra')), 'Migración aplicada y respaldo creado');
+  ok(/Estructura y estados actualizados/.test(await page.textContent('#cfgMigra')) && /RESPALDO MIGRACION/.test(await page.textContent('#cfgMigra')), 'Migración por pasos aplicada y respaldo creado');
   await page.click('#cfgBodegas .btn >> nth=2');
   await page.fill('#b_dir', 'Calle 10 # 20-30, Itagüí'); await page.fill('#b_contacto', 'Jefe de bodega'); await page.fill('#b_tel', '3001112233');
   await page.click('#modal .btn-p'); await esperarToast(page, /Bodega guardada/);

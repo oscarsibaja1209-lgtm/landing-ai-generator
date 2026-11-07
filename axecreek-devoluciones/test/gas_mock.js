@@ -40,7 +40,8 @@ function crearMock(rutaJson, opciones = {}) {
     insertColumnsAfter(after, n) { this.maxCols += n; }
     getRange(r, c, nr = 1, nc = 1) { if (r < 1 || c < 1 || nr < 1 || nc < 1) throw new Error(`Rango inválido ${r},${c},${nr},${nc}`); if (c + nc - 1 > this.maxCols) throw new Error('Columnas fuera del rango de la hoja'); return new Range(this, r, c, nr, nc); }
     getDataRange() { return new Range(this, 1, 1, Math.max(1, this.getLastRow()), Math.max(1, this.getLastColumn())); }
-    copyTo(destino) { const n = new Sheet(this.nombre + ' (copia)', []); n.filas = this.filas.map(r => r.slice()); n.maxCols = this.maxCols; hojas[n.nombre] = n; const self = n; n.setName = nm => { delete hojas[self.nombre]; self.nombre = nm; hojas[nm] = self; return self; }; n.hideSheet = () => self; return n; }
+    hideSheet() { this.oculta = true; return this; }
+    copyTo(destino) { if (this.filas.length > 5000) throw new Error('Se agotó el tiempo de espera del servicio Hojas de cálculo (copia de pestaña grande)'); const n = new Sheet(this.nombre + ' (copia)', []); n.filas = this.filas.map(r => r.slice()); n.maxCols = this.maxCols; hojas[n.nombre] = n; const self = n; n.setName = nm => { delete hojas[self.nombre]; self.nombre = nm; hojas[nm] = self; return self; }; n.hideSheet = () => self; return n; }
     appendRow(arr) { stats.appendRow++; const r = this.getLastRow() + 1; this._escribir(r, 1, [arr]); }
     formato(r, c) { return this.formatos[r + ',' + c] || (this.colTexto && this.colTexto.has(c) && r >= 4 ? '@' : ''); }
     _leer(r, c, nr, nc) {
@@ -49,6 +50,8 @@ function crearMock(rutaJson, opciones = {}) {
       stats.getValues++; stats.celdasLeidas += nr * nc; return out;
     }
     _escribir(r, c, vals) {
+      const celdas = vals.length * (vals[0] ? vals[0].length : 0);
+      if (celdas > 40000) throw new Error('Se agotó el tiempo de espera del servicio Hojas de cálculo (escritura de ' + celdas + ' celdas en una sola llamada)');
       vals.forEach((fila, i) => {
         while (this.filas.length < r + i) this.filas.push([]);
         const dest = this.filas[r - 1 + i];

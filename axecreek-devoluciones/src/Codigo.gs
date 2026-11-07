@@ -165,18 +165,13 @@ function escribirCambios_(filas, colMin, colMax) {
   const ordenadas = filas.slice().sort((a, b) => a - b);
   const ancho = colMax - colMin + 1;
   // Muchas filas dispersas: un solo bloque (1 llamada) es mucho más rápido que cientos de llamadas pequeñas.
-  if (ordenadas.length > 40) {
-    const ini = ordenadas[0], fin = ordenadas[ordenadas.length - 1];
-    const bloque = [];
-    for (let f = ini; f <= fin; f++) bloque.push(data[f - 1].slice(colMin, colMax + 1));
-    ws.getRange(ini, colMin + 1, fin - ini + 1, ancho).setValues(bloque);
-    SpreadsheetApp.flush();
-    return;
-  }
+  // Filas cercanas se escriben juntas en un bloque, pero ningún bloque pasa de 1.500 filas
+  // (bloques muy grandes pueden agotar el tiempo de espera de Google Sheets).
+  const hueco = ordenadas.length > 40 ? 60 : 3;
   let i = 0;
   while (i < ordenadas.length) {
     let j = i;
-    while (j + 1 < ordenadas.length && ordenadas[j + 1] - ordenadas[j] <= 3) j++;
+    while (j + 1 < ordenadas.length && ordenadas[j + 1] - ordenadas[j] <= hueco && ordenadas[j + 1] - ordenadas[i] < 1500) j++;
     const ini = ordenadas[i], fin = ordenadas[j];
     const bloque = [];
     for (let f = ini; f <= fin; f++) bloque.push(data[f - 1].slice(colMin, colMax + 1));
@@ -1317,74 +1312,82 @@ function analizarMigracion_() {
 function previsualizarMigracion(tokenSesion) {
   return seguro_(() => { exigir_(tokenSesion, 'config'); return Object.assign({ ok: true }, analizarMigracion_()); });
 }
-function ejecutarMigracion(tokenSesion) {
+// La migración se hace POR PASOS (varias llamadas cortas) para no superar el tiempo de espera de Google.
+// Respaldo liviano: guarda en una pestaña oculta solo lo que la migración cambia (estado, estado bodega, intento).
+const LOTE_MIGRACION = 2500;
+function ejecutarMigracion(tokenSesion) { return migrarPaso('respaldo', 0, tokenSesion); }
+function migrarPaso(paso, desde, tokenSesion) {
   return conLock_(() => {
     const u = exigir_(tokenSesion, 'config');
-    resetNov_();
-    const antes = analizarMigracion_();
-    // 1) Copia de seguridad del archivo completo en Drive
-    // Si el proyecto no tiene permiso de Drive, el respaldo se hace duplicando las pestañas que se modifican
-    // dentro del mismo archivo (no necesita permisos extra).
-    let backup = '', backupTxt = '';
-    const sello = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH.mm');
-    try { const copia = DriveApp.getFileById(SPREADSHEET_ID).makeCopy('RESPALDO Novedades Devoluciones ' + sello); backup = copia.getUrl(); backupTxt = 'Respaldo creado en tu Drive.'; }
-    catch (eDrive) {
-      try {
-        const nombres = [];
-        [TABS.NOVEDADES, TABS.USUARIOS, TABS.DESPLEGABLES].forEach(n => {
-          const h = hoja_(n); if (!h) return;
-          const nombre = ('RESPALDO ' + sello + ' ' + n).slice(0, 99);
-          const c = h.copyTo(ss_()); c.setName(nombre); try { c.hideSheet(); } catch (e) {}
-          nombres.push(nombre);
-        });
-        backupTxt = 'Respaldo creado dentro del mismo archivo en pestañas ocultas: ' + nombres.join(', ') + '.';
-      } catch (e) { throw new Error('No se pudo crear la copia de seguridad (' + e.message + '). No se cambió nada.'); }
+    if (paso === 'respaldo') {
+      const { data } = nov_();
+      const sello = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH.mm');
+      const nombre = 'RESPALDO MIGRACION ' + sello;
+      const ws = hoja_(nombre) || ss_().insertSheet(nombre);
+      const filas = [['Fila NOVEDADES', 'Guía', 'Estado (antes)', 'Estado recepción (antes)', 'Intento (antes)']];
+      for (let i = FILA_INICIO - 1; i < data.length; i++) { if (txt_(data[i][COL.GUIA])) filas.push([i + 1, "'" + f_(data[i][COL.GUIA]), txt_(data[i][COL.ESTADO]), txt_(data[i][COL.ESTADO_RECEPCION]), txt_(data[i][COL.INTENTO])]); }
+      for (let k = 0; k < filas.length; k += 5000) { const b = filas.slice(k, k + 5000); ws.getRange(k + 1, 1, b.length, 5).setValues(b); }
+      try { ws.hideSheet(); } catch (e) {}
+      registrarLog_(u, 'MIGRACIÓN · RESPALDO', nombre, (filas.length - 1) + ' filas');
+      return { ok: true, siguiente: 'config', desde: 0, msg: 'Respaldo creado en la pestaña oculta "' + nombre + '".', respaldo: nombre };
     }
-    // 2) Hojas nuevas
-    const wsB = asegurarHoja_(TABS.BODEGAS, ['Ciudad', 'Dirección', 'Contacto', 'Teléfono', 'Activa (SI/NO)']);
-    if (wsB.getLastRow() < 2) wsB.getRange(2, 1, 3, 5).setValues([['BOGOTA', '', '', '', 'SI'], ['CALI', '', '', '', 'SI'], ['MEDELLIN', '', '', '', 'SI']]);
-    const wsP = asegurarHoja_(TABS.PARAMETROS, ['Parámetro', 'Valor', 'Descripción']);
-    if (wsP.getLastRow() < 2) wsP.getRange(2, 1, 5, 3).setValues([
-      ['VALOR_COBRO_MENSUAL', PARAM_DEFAULTS.VALOR_COBRO_MENSUAL, 'Valor mensual de indemnización por guía en Bodega Dropi (aplica a los cobros nuevos)'],
-      ['CONTACTO_URGENTE', PARAM_DEFAULTS.CONTACTO_URGENTE, 'Nombre y teléfono que ve la bodega cuando una guía NO se debe recibir'],
-      ['LIMITE_WSP_DIA', PARAM_DEFAULTS.LIMITE_WSP_DIA, 'Límite sugerido de WhatsApp por asesor al día'],
-      ['CRM_WEBHOOK_URL', '', 'URL del CRM para enviar WhatsApp por API (vacío = manual)'],
-      ['MAX_BUSQUEDA', PARAM_DEFAULTS.MAX_BUSQUEDA, 'Máximo de valores por búsqueda en el buscador de soluciones']]);
-    asegurarHoja_(TABS.REEMPLAZOS, ['Fecha', 'Row Novedades', 'Guía inicial', 'Guía reemplazatoria', 'Intento', 'Origen', 'Usuario']);
-    asegurarHoja_(TABS.RECHAZOS, ['Fecha y hora', 'Guía leída', 'Bodega Dropi', 'Usuario', 'Motivo', 'Estado', 'Row Novedades', 'Resuelto por', 'Fecha resolución']);
-    const wsU = hoja_(TABS.USUARIOS);
-    if (wsU.getMaxColumns() < 7) wsU.insertColumnsAfter(wsU.getMaxColumns(), 7 - wsU.getMaxColumns());
-    wsU.getRange(2, 6, 1, 2).setValues([['Sede (Bodega Dropi)', 'Categorías (Comercial)']]);
-    const wsD = hoja_(TABS.DESPLEGABLES);
-    if (wsD) { wsD.getRange(3, 1, Math.max(wsD.getMaxRows() - 2, 1), 1).clearContent(); wsD.getRange(3, 1, ESTADOS_ORDEN.length, 1).setValues(ESTADOS_ORDEN.map(e => [e])); }
-    // 3) Encabezados y columnas nuevas de NOVEDADES
-    const { ws, data } = nov_();
-    Object.keys(HEADERS_NUEVOS).forEach(c => ws.getRange(3, Number(c) + 1).setValue(HEADERS_NUEVOS[c]));
-    // 4) Estados, estado de bodega, intentos (en memoria, una sola escritura por bloque de columnas)
-    const vistos = {}; const n = data.length - (FILA_INICIO - 1);
-    if (n > 0) {
-      const colEstado = [], colBodega = [], colIntento = [];
-      for (let i = FILA_INICIO - 1; i < data.length; i++) {
+    if (paso === 'config') {
+      const wsB = asegurarHoja_(TABS.BODEGAS, ['Ciudad', 'Dirección', 'Contacto', 'Teléfono', 'Activa (SI/NO)']);
+      if (wsB.getLastRow() < 2) wsB.getRange(2, 1, 3, 5).setValues([['BOGOTA', '', '', '', 'SI'], ['CALI', '', '', '', 'SI'], ['MEDELLIN', '', '', '', 'SI']]);
+      const wsP = asegurarHoja_(TABS.PARAMETROS, ['Parámetro', 'Valor', 'Descripción']);
+      if (wsP.getLastRow() < 2) wsP.getRange(2, 1, 5, 3).setValues([
+        ['VALOR_COBRO_MENSUAL', PARAM_DEFAULTS.VALOR_COBRO_MENSUAL, 'Valor mensual de indemnización por guía en Bodega Dropi (aplica a los cobros nuevos)'],
+        ['CONTACTO_URGENTE', PARAM_DEFAULTS.CONTACTO_URGENTE, 'Nombre y teléfono que ve la bodega cuando una guía NO se debe recibir'],
+        ['LIMITE_WSP_DIA', PARAM_DEFAULTS.LIMITE_WSP_DIA, 'Límite sugerido de WhatsApp por asesor al día'],
+        ['CRM_WEBHOOK_URL', '', 'URL del CRM para enviar WhatsApp por API (vacío = manual)'],
+        ['MAX_BUSQUEDA', PARAM_DEFAULTS.MAX_BUSQUEDA, 'Máximo de valores por búsqueda en el buscador de soluciones']]);
+      asegurarHoja_(TABS.REEMPLAZOS, ['Fecha', 'Row Novedades', 'Guía inicial', 'Guía reemplazatoria', 'Intento', 'Origen', 'Usuario']);
+      asegurarHoja_(TABS.RECHAZOS, ['Fecha y hora', 'Guía leída', 'Bodega Dropi', 'Usuario', 'Motivo', 'Estado', 'Row Novedades', 'Resuelto por', 'Fecha resolución']);
+      const wsU = hoja_(TABS.USUARIOS);
+      if (wsU.getMaxColumns() < 7) wsU.insertColumnsAfter(wsU.getMaxColumns(), 7 - wsU.getMaxColumns());
+      wsU.getRange(2, 6, 1, 2).setValues([['Sede (Bodega Dropi)', 'Categorías (Comercial)']]);
+      const wsD = hoja_(TABS.DESPLEGABLES);
+      if (wsD) { const n = Math.max(wsD.getLastRow() - 2, 1); wsD.getRange(3, 1, n, 1).clearContent(); wsD.getRange(3, 1, ESTADOS_ORDEN.length, 1).setValues(ESTADOS_ORDEN.map(e => [e])); }
+      const ws = hoja_(TABS.NOVEDADES); asegurarColumnas_(ws);
+      const cab = ws.getRange(3, 33, 1, 5).getValues()[0];
+      [32, 33, 34, 35, 36].forEach((c, k) => { cab[k] = HEADERS_NUEVOS[c]; });
+      ws.getRange(3, 33, 1, 5).setValues([cab]);
+      [TABS.BODEGAS, TABS.PARAMETROS, TABS.USUARIOS, TABS.DESPLEGABLES].forEach(clearCache);
+      return { ok: true, siguiente: 'estados', desde: FILA_INICIO, msg: 'Pestañas y encabezados listos.' };
+    }
+    if (paso === 'estados') {
+      const { ws, data } = nov_();
+      const ini = Math.max(FILA_INICIO, Number(desde) || FILA_INICIO);
+      const fin = Math.min(data.length, ini + LOTE_MIGRACION - 1);
+      if (ini > data.length) return { ok: true, siguiente: 'fin', desde: 0, total: data.length - FILA_INICIO + 1, msg: 'Estados actualizados.' };
+      const vistos = {};
+      for (let i = FILA_INICIO - 1; i < ini - 1; i++) { const g = sinCeros_(normCode_(data[i][COL.GUIA])); if (g) vistos[g] = (vistos[g] || 0) + 1; }
+      const colE = [], colB = [], colI = []; let cambiadas = 0;
+      for (let i = ini - 1; i < fin; i++) {
         const r = data[i]; const g = sinCeros_(normCode_(r[COL.GUIA]));
-        let est = txt_(r[COL.ESTADO]); let eb = txt_(r[COL.ESTADO_RECEPCION]);
+        let est = txt_(r[COL.ESTADO]), eb = txt_(r[COL.ESTADO_RECEPCION]); let intento = r[COL.INTENTO];
         if (g) {
-          est = ESTADOS_LEGADO[est] || est || E.PENDIENTE;
-          eb = EB_LEGADO[eb] || eb;
+          const e0 = est, b0 = eb;
+          est = ESTADOS_LEGADO[est] || est || E.PENDIENTE; eb = EB_LEGADO[eb] || eb;
           if (est === E.BOD_NOTIF && !eb) eb = EB.TRANSITO;
           if (est === E.BOD_NOTIF && eb === EB.RECIBIDO) est = E.CULM_BOD;
-          vistos[g] = (vistos[g] || 0) + 1;
+          vistos[g] = (vistos[g] || 0) + 1; if (Number(intento) !== vistos[g]) { intento = vistos[g]; cambiadas++; }
+          if (e0 !== est || b0 !== eb) cambiadas++;
         }
-        colEstado.push([est]); colBodega.push([eb]); colIntento.push([g ? vistos[g] : '']);
-        r[COL.ESTADO] = est; r[COL.ESTADO_RECEPCION] = eb; r[COL.INTENTO] = g ? vistos[g] : '';
+        colE.push([est]); colB.push([eb]); colI.push([intento === undefined ? '' : intento]);
       }
-      ws.getRange(FILA_INICIO, COL.ESTADO + 1, n, 1).setValues(colEstado);
-      ws.getRange(FILA_INICIO, COL.ESTADO_RECEPCION + 1, n, 1).setValues(colBodega);
-      ws.getRange(FILA_INICIO, COL.INTENTO + 1, n, 1).setValues(colIntento);
+      if (cambiadas) {
+        const n = fin - ini + 1;
+        ws.getRange(ini, COL.ESTADO + 1, n, 1).setValues(colE);
+        ws.getRange(ini, COL.ESTADO_RECEPCION + 1, n, 1).setValues(colB);
+        ws.getRange(ini, COL.INTENTO + 1, n, 1).setValues(colI);
+        SpreadsheetApp.flush();
+      }
+      const total = data.length - FILA_INICIO + 1;
+      if (fin >= data.length) { registrarLog_(u, 'MIGRACIÓN', 'TODO', 'Estados actualizados en ' + total + ' filas'); return { ok: true, siguiente: 'fin', desde: 0, total, msg: 'Estructura y estados actualizados.' }; }
+      return { ok: true, siguiente: 'estados', desde: fin + 1, total, avance: fin - FILA_INICIO + 1, msg: 'Procesadas ' + (fin - FILA_INICIO + 1) + ' de ' + total + ' filas.' };
     }
-    SpreadsheetApp.flush();
-    [TABS.BODEGAS, TABS.PARAMETROS, TABS.USUARIOS, TABS.DESPLEGABLES].forEach(clearCache);
-    registrarLog_(u, 'MIGRACIÓN', 'TODO', JSON.stringify(antes.cambios).slice(0, 2000) + ' | respaldo: ' + backup);
-    return { ok: true, msg: 'Estructura y estados actualizados. ' + backupTxt, backup, cambios: antes.cambios, total: antes.total };
+    throw new Error('Paso desconocido.');
   });
 }
 

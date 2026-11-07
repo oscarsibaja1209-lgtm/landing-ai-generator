@@ -511,9 +511,9 @@ iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:1
   </div>
   <div class="card p" style="border:2px solid var(--brand-line);display:flex;flex-direction:column;gap:12px">
     <h3 style="font-size:16px">Actualizar estructura y estados</h3>
-    <p class="muted small">Crea las pestañas y columnas nuevas y pasa los estados viejos a los nuevos. Primero hace una copia de seguridad del archivo en tu Drive. Si se corre dos veces no duplica nada.</p>
+    <p class="muted small">Crea las pestañas y columnas nuevas y pasa los estados viejos a los nuevos. Primero guarda un respaldo de los estados actuales en una pestaña oculta. Si se corre dos veces no duplica nada.</p>
     <div id="cfgMigra"></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" onclick="previaMigracion()"><i class="fas fa-eye"></i> 1. Ver qué va a cambiar</button><button class="btn btn-p" onclick="aplicarMigracion()"><i class="fas fa-wand-magic-sparkles"></i> 2. Hacer copia y aplicar</button></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" onclick="previaMigracion()"><i class="fas fa-eye"></i> 1. Ver qué va a cambiar</button><button class="btn btn-p" onclick="aplicarMigracion()"><i class="fas fa-wand-magic-sparkles"></i> 2. Respaldar y aplicar</button></div>
   </div>
   <div class="card p" style="display:flex;flex-direction:column;gap:10px">
     <h3 style="font-size:16px">Asistente IA (opcional)</h3>
@@ -1175,11 +1175,28 @@ function previaMigracion() {
   });
 }
 function aplicarMigracion() {
-  confirmar('Actualizar estructura y estados', 'Primero se hará una copia de seguridad del archivo en tu Drive y luego se aplicarán los cambios. Te recomendamos también hacer tu propia copia. ¿Continuar?', 'Hacer copia y aplicar').then(ok => {
-    if (!ok) return; cargando('cfgMigra', 'Creando copia de seguridad y aplicando… puede tardar un minuto.');
-    gs('ejecutarMigracion').then(r => { if (!r.ok) { $('cfgMigra').innerHTML = `<div class="alert bad"><i class="fas fa-circle-exclamation"></i><div>${esc(r.msg)}</div></div>`; return; } $('cfgMigra').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div><b>${esc(r.msg)}</b>${r.backup ? `<br><a href="${esc(r.backup)}" target="_blank">Abrir la copia de seguridad</a>` : ''}</div></div>`; toast('Actualización completa', 'ok'); cargarConfig(); S.ini.bodegasDropi = S.ini.bodegasDropi; });
+  confirmar('Actualizar estructura y estados', 'Primero se guarda un respaldo de los estados actuales en una pestaña oculta del mismo archivo y luego se aplican los cambios por partes. Te recomendamos también hacer tu propia copia (Archivo → Hacer una copia). ¿Continuar?', 'Respaldar y aplicar').then(async ok => {
+    if (!ok) return;
+    const caja = $('cfgMigra'); const pinta = (t, cls) => caja.innerHTML = `<div class="alert ${cls || 'info'}"><i class="fas ${cls === 'ok' ? 'fa-circle-check' : cls === 'bad' ? 'fa-circle-exclamation' : 'fa-circle-notch fa-spin'}"></i><div>${t}</div></div>`;
+    let paso = 'respaldo', desde = 0, respaldo = '', intentos = 0;
+    pinta('Guardando respaldo…');
+    while (paso !== 'fin') {
+      let r;
+      try { r = await gs('migrarPaso', paso, desde); } catch (e) { r = { ok: false, msg: (e && e.message) || 'Error de conexión' }; }
+      if (!r.ok) {
+        if (++intentos <= 2 && /tiempo de espera|timed out|Service/i.test(r.msg || '')) { pinta('Google tardó en responder, reintentando… (' + intentos + ')'); await new Promise(z => setTimeout(z, 3000)); continue; }
+        pinta(esc(r.msg) + '<br>Puedes volver a pulsar el botón: el proceso continúa sin duplicar nada.', 'bad'); return;
+      }
+      intentos = 0;
+      if (r.respaldo) respaldo = r.respaldo;
+      paso = r.siguiente; desde = r.desde;
+      pinta(esc(r.msg) + (r.total && r.avance ? ` <b>${Math.round(r.avance / r.total * 100)}%</b>` : ''));
+    }
+    pinta(`<b>Estructura y estados actualizados.</b>${respaldo ? '<br>Respaldo de los estados anteriores: pestaña oculta "' + esc(respaldo) + '".' : ''}`, 'ok');
+    toast('Actualización completa', 'ok'); cargarConfig();
   });
 }
+
 </script>
 </body>
 </html>
