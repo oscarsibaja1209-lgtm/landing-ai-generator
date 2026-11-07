@@ -1,0 +1,4 @@
+capturas/
+*.json
+*.xlsx
+node_modules/

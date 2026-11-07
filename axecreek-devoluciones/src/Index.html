@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Novedades Devoluciones — Dropi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F6F8; --card:#FFFFFF; --ink:#0F172A; --ink2:#334155; --muted:#5B6576; --line:#E6E9EF; --line2:#D5DAE3;
+  --brand:#FF6D00; --brand2:#E85D00; --brand-ink:#B8420A; --brand-soft:#FFF3EA; --brand-line:#FFD8BA;
+  --ok:#047857; --ok-soft:#ECFDF5; --bad:#B91C1C; --bad-soft:#FEF2F2; --warn:#92400E; --warn-soft:#FFFBEB; --info:#1D4ED8; --info-soft:#EFF6FF;
+  --sh1:0 1px 2px rgba(15,23,42,.04),0 1px 1px rgba(15,23,42,.03); --sh2:0 10px 30px -12px rgba(15,23,42,.18); --sh3:0 24px 60px -20px rgba(15,23,42,.35);
+  --r:14px; --r2:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.ttl{font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.01em}
+button,input,select,textarea{font-family:inherit;font-size:14px;color:inherit}
+a{color:var(--brand-ink)}
+.hidden{display:none!important}
+/* ── Login / loader ── */
+.gate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(1200px 600px at 10% -10%,#FFE6D2 0,transparent 60%),radial-gradient(900px 500px at 110% 110%,#FFE9D9 0,transparent 55%),var(--bg)}
+.gate-card{width:100%;max-width:420px;background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh3);padding:34px 30px;text-align:center}
+.logo{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#FF8A1F,#E25300);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;box-shadow:0 10px 24px -10px rgba(232,93,0,.7);font-family:"Plus Jakarta Sans"}
+.gate h2{font-size:22px;margin:16px 0 6px}
+.gate p{color:var(--muted);font-size:14px}
+.loader-bar{height:4px;background:#F1F2F5;border-radius:4px;overflow:hidden;margin-top:22px}
+.loader-bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,#FF8A1F,#E25300);border-radius:4px;animation:carga 1.1s ease-in-out infinite}
+@keyframes carga{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+/* ── Shell ── */
+.app{display:flex;min-height:100vh}
+.side{width:264px;flex:0 0 264px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 14px}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 18px}
+.brand .logo{width:38px;height:38px;border-radius:11px;font-size:17px}
+.brand b{display:block;font-family:"Plus Jakarta Sans";font-size:15px;line-height:1.1}
+.brand small{color:var(--muted);font-size:12px}
+.nav{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;padding-right:2px}
+.nav-sec{font-size:11px;font-weight:700;color:#8A93A3;letter-spacing:.08em;text-transform:uppercase;padding:14px 10px 6px}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;border:0;background:transparent;padding:10px 12px;border-radius:11px;font-weight:600;color:var(--ink2);cursor:pointer;text-align:left;transition:background .15s,color .15s}
+.nav button i{width:18px;text-align:center;color:#8A93A3;font-size:15px}
+.nav button:hover{background:#F6F7F9}
+.nav button.on{background:var(--brand-soft);color:var(--brand-ink)}
+.nav button.on i{color:var(--brand)}
+.nav .cnt{margin-left:auto;background:#DC2626;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px}
+.me{border-top:1px solid var(--line);padding:14px 8px 2px;display:flex;align-items:center;gap:10px}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1F2937,#475569);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:0 0 36px}
+.me b{display:block;font-size:13px;line-height:1.2}
+.me small{color:var(--muted);font-size:12px}
+.me button{margin-left:auto}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:16px 28px;background:rgba(245,246,248,.85);backdrop-filter:saturate(1.4) blur(8px);position:sticky;top:0;z-index:20;border-bottom:1px solid transparent}
+.top h1{font-size:22px;font-weight:800}
+.top .sub{color:var(--muted);font-size:13px}
+.top .acts{margin-left:auto;display:flex;gap:8px}
+.btn.burger{display:none}
+.page{padding:6px 28px 40px;display:flex;flex-direction:column;gap:18px}
+section.tab{display:none;flex-direction:column;gap:18px}
+section.tab.on{display:flex}
+/* ── Componentes ── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);box-shadow:var(--sh1)}
+.card.p{padding:20px}
+.card-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--line)}
+.card-h h3{font-size:16px;font-weight:800}
+.card-h .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.grid{display:grid;gap:14px}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(178px,1fr))}
+.g-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.g-3{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+.kpi{padding:16px 18px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden;cursor:default}
+.kpi .l{font-size:12.5px;font-weight:600;color:var(--muted);padding-right:40px}
+.kpi .v{font-family:"Plus Jakarta Sans";font-size:28px;font-weight:800;line-height:1.1}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.hl{background:linear-gradient(160deg,#FFF6EE,#FFFFFF 70%);border-color:var(--brand-line)}
+.kpi.hl .l,.kpi.hl .v{color:var(--brand-ink)}
+.kpi.bad .v{color:var(--bad)} .kpi.ok .v{color:var(--ok)}
+.kpi .ico{position:absolute;right:14px;top:14px;width:32px;height:32px;border-radius:10px;background:#F5F6F8;display:flex;align-items:center;justify-content:center;color:#8A93A3}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 16px}
+.fld{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);min-width:0}
+.fld.grow{flex:1 1 240px}
+.inp,.sel,textarea.inp{height:40px;border:1px solid var(--line2);border-radius:11px;padding:0 12px;background:#fff;outline:none;transition:border .15s,box-shadow .15s;min-width:0}
+textarea.inp{height:auto;padding:10px 12px;resize:vertical;line-height:1.45}
+.inp:focus,.sel:focus{border-color:#FDBA74;box-shadow:0 0 0 4px rgba(255,109,0,.12)}
+.sel{padding-right:30px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.btn{height:40px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 15px;border-radius:11px;border:1px solid var(--line2);background:#fff;font-weight:700;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:transform .05s,box-shadow .15s,background .15s}
+.btn:hover{background:#F8F9FB}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.btn-p{border:0;color:#fff;background:linear-gradient(180deg,#D9530A,#B83D0A);box-shadow:0 8px 18px -10px rgba(184,61,10,.9),inset 0 1px 0 rgba(255,255,255,.18)}
+.btn-p:hover{background:linear-gradient(180deg,#C94A08,#A53608)}
+.btn-dark{border:0;color:#fff;background:#111827}
+.btn-dark:hover{background:#1F2937}
+.btn-ok{border:0;color:#fff;background:#047857}
+.btn-ok:hover{background:#065F46}
+.btn-bad{border:1px solid #FCA5A5;color:#991B1B;background:#fff}
+.btn-sm{height:32px;padding:0 11px;font-size:13px;border-radius:9px}
+.btn-ic{width:40px;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:#fff;font-weight:600;font-size:13px;color:var(--ink2);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.chip b{font-weight:800}
+.chip.on{background:#111827;border-color:#111827;color:#fff}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.badge:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.75}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:#EEF2FF;color:#3730A3;margin-left:6px;vertical-align:middle}
+.tblw{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:#FBFBFC;position:sticky;top:0}
+.tbl td{padding:11px 12px;border-bottom:1px solid #F1F3F6;vertical-align:top}
+.tbl tr:hover td{background:#FCFCFD}
+.tbl td.g{font-weight:700;white-space:nowrap}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty i{font-size:26px;color:#C3C9D4;display:block;margin-bottom:10px}
+.bar{height:10px;background:#F1F3F6;border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+.rowbar{display:grid;grid-template-columns:minmax(150px,240px) 1fr 70px;gap:12px;align-items:center;font-size:13px;padding:5px 0;cursor:pointer;border-radius:8px}
+.rowbar:hover{background:#FAFAFB}
+.rowbar .n{display:flex;align-items:center;gap:8px;font-weight:600}
+.rowbar .n i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.rowbar .v{text-align:right;font-weight:800}
+.list-kv{display:flex;flex-direction:column}
+.list-kv div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #F1F3F6;font-size:13px}
+.list-kv div:last-child{border-bottom:0}
+.list-kv b{font-weight:800}
+.chart-box{position:relative;height:260px}
+.alert{border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;font-size:13px}
+.alert i{margin-top:2px}
+.alert.warn{background:var(--warn-soft);border:1px solid #FDE68A;color:#78350F}
+.alert.bad{background:var(--bad-soft);border:1px solid #FECACA;color:#7F1D1D}
+.alert.ok{background:var(--ok-soft);border:1px solid #A7F3D0;color:#064E3B}
+.alert.info{background:var(--info-soft);border:1px solid #BFDBFE;color:#1E3A8A}
+.bulk{position:sticky;bottom:14px;z-index:15;display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#0F172A;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:var(--sh3)}
+.bulk .inp,.bulk .sel{height:36px;border-color:#334155;background:#fff;color:var(--ink)}
+.bulk b{font-size:14px}
+.pager{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.grp{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+.grp-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 16px;background:#FCFCFD;border-bottom:1px solid var(--line)}
+.grp-h .t{font-weight:800;font-size:15px;font-family:"Plus Jakarta Sans"}
+.grp-h .s{color:var(--muted);font-size:12px}
+.grp-h .r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.stepn{font-size:11px;font-weight:800;color:var(--brand-ink);letter-spacing:.06em}
+.drop{border:2px dashed #FDBA74;background:#FFFBF7;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.drop.drag{background:#FFF1E6}
+/* Drawer y modal */
+.scrim{position:fixed;inset:0;background:rgba(15,23,42,.38);backdrop-filter:blur(2px);z-index:60;display:none}
+.scrim.on{display:block}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(560px,100vw);background:#fff;z-index:61;box-shadow:var(--sh3);transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.drawer-h{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.drawer-h h3{font-size:19px;font-weight:800}
+.drawer-b{padding:18px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.drawer-f{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-48%);opacity:0;pointer-events:none;width:min(720px,calc(100vw - 24px));max-height:calc(100vh - 40px);background:#fff;border-radius:20px;z-index:62;box-shadow:var(--sh3);display:flex;flex-direction:column;transition:opacity .15s,transform .15s}
+.modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.form2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.sec-t{font-size:13px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px}
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl{display:grid;grid-template-columns:16px 1fr;gap:10px;padding-bottom:14px;position:relative}
+.tl:before{content:"";position:absolute;left:7px;top:14px;bottom:0;width:2px;background:#EEF0F4}
+.tl:last-child:before{display:none}
+.tl .d{width:12px;height:12px;border-radius:50%;margin-top:3px;border:2px solid #fff;box-shadow:0 0 0 2px currentColor}
+.tl b{font-size:13px;display:block}
+.tl span{font-size:12px;color:var(--muted)}
+.toast{position:fixed;right:20px;bottom:20px;z-index:99;display:flex;flex-direction:column;gap:8px}
+.toast div{background:#0F172A;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:var(--sh3);font-size:13.5px;font-weight:600;display:flex;gap:10px;align-items:center;max-width:420px;animation:entra .2s ease}
+.toast div.ok i{color:#34D399}.toast div.bad i{color:#F87171}.toast div.warn i{color:#FBBF24}
+@keyframes entra{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+/* Bodega escáner */
+.scan{border:2px solid var(--brand);border-radius:20px;background:#fff;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 18px 40px -26px rgba(232,93,0,.7)}
+.scan .inp{height:66px;font-size:26px;font-weight:800;letter-spacing:1px;border-radius:14px}
+.res{border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:6px;border:2px solid}
+.res .k{font-size:13px;font-weight:800;letter-spacing:.06em}
+.res .c{font-family:"Plus Jakarta Sans";font-size:28px;font-weight:800;word-break:break-all}
+.res.ok{background:var(--ok-soft);border-color:#059669;color:#064E3B}
+.res.bad{background:var(--bad-soft);border-color:#DC2626;color:#7F1D1D}
+.res.warn{background:var(--warn-soft);border-color:#D97706;color:#78350F}
+.res.info{background:#F8FAFC;border-color:#CBD5E1;color:#334155}
+.feed{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}
+.feed div{display:flex;gap:10px;align-items:center;font-size:13px;padding:8px 10px;border-radius:10px;background:#F8F9FB}
+.feed div b{font-weight:800}
+#camBox{width:100%;max-width:440px;border-radius:14px;overflow:hidden;background:#0F172A}
+.wa-prev{background:#E7F7EC;border-radius:14px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.55;color:#14532D;max-height:420px;overflow:auto}
+.progress{height:10px;background:#FEF3C7;border-radius:6px;overflow:hidden;width:220px}
+.progress i{display:block;height:100%;background:#D97706}
+iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:14px;background:#EEF0F3}
+.radio-card{flex:1 1 220px;display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line2);border-radius:14px;padding:14px;cursor:pointer;font-size:13px;background:#fff}
+.radio-card.on{border:2px solid var(--brand-ink);background:var(--brand-soft)}
+.radio-card b{display:block;font-size:14px}
+@media (max-width: 900px){
+  .side{position:fixed;left:0;top:0;z-index:70;transform:translateX(-105%);transition:transform .2s;box-shadow:var(--sh3)}
+  .side.on{transform:none}
+  .btn.burger{display:inline-flex}
+  .top .sub,.hide-sm{display:none}
+  .g-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{padding:12px 14px}
+  .kpi .v{font-size:22px}
+  .kpi .ico{display:none}
+  .kpi .l{padding-right:0}
+  .top{padding:12px 16px}
+  .top h1{font-size:18px}
+  .page{padding:6px 16px 40px}
+  .rowbar{grid-template-columns:minmax(110px,150px) 1fr 54px}
+  .scan .inp{font-size:20px;height:58px}
+}
+</style>
+</head>
+<body>
+
+<? if (typeof sessionToken !== 'undefined' && sessionToken === '') { ?>
+<div class="gate" id="gateLogin">
+  <div class="gate-card">
+    <div class="logo">D</div>
+    <h2>Novedades Devoluciones</h2>
+    <p id="loginTxt">Ingresa tu correo corporativo. Te enviaremos un código de seguridad.</p>
+    <div id="paso1" style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+      <input type="email" id="loginEmail" class="inp" placeholder="tucorreo@empresa.com" style="text-align:center" autocomplete="email">
+      <button class="btn btn-p" id="btnOtp" onclick="pedirOTP()"><i class="fas fa-paper-plane"></i> Recibir código</button>
+    </div>
+    <div id="paso2" class="hidden" style="margin-top:20px;flex-direction:column;gap:10px">
+      <input type="text" id="loginOtp" class="inp" placeholder="••••••" maxlength="6" inputmode="numeric" style="text-align:center;font-size:24px;letter-spacing:10px;font-weight:800;height:54px">
+      <button class="btn btn-p" id="btnVerificar" onclick="verificarOTP()"><i class="fas fa-lock-open"></i> Verificar e ingresar</button>
+      <button class="btn" onclick="volverPaso1()">Cambiar correo</button>
+    </div>
+    <p class="small muted" style="margin-top:18px">Acceso exclusivo · Dropi</p>
+  </div>
+</div>
+<? } ?>
+
+<div class="gate hidden" id="gateLoad">
+  <div class="gate-card">
+    <div class="logo">D</div>
+    <h2>Novedades Devoluciones</h2>
+    <p>Preparando tu espacio de trabajo…</p>
+    <div class="loader-bar"><i></i></div>
+  </div>
+</div>
+<div class="gate hidden" id="gateError">
+  <div class="gate-card">
+    <div class="logo" style="background:#111827">!</div>
+    <h2>No pudimos darte acceso</h2>
+    <p id="errorMsg"></p>
+    <button class="btn btn-p" style="margin-top:20px;width:100%" onclick="salir()">Volver a ingresar</button>
+  </div>
+</div>
+<input type="hidden" id="sesion_frontend" value="<?= typeof sessionToken !== 'undefined' ? sessionToken : '' ?>">
+
+<div class="app hidden" id="app">
+  <aside class="side" id="side">
+    <div class="brand"><div class="logo">D</div><div><b>Novedades</b><small>Devoluciones · Dropi</small></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="me"><div class="avatar" id="meIni">—</div><div style="min-width:0"><b id="meNombre">—</b><small id="meRol">—</small></div><button class="btn btn-sm btn-ic" title="Cerrar sesión" aria-label="Cerrar sesión" onclick="salir()"><i class="fas fa-arrow-right-from-bracket"></i></button></div>
+  </aside>
+  <div class="scrim" id="scrimSide" onclick="toggleSide(false)"></div>
+  <div class="main">
+    <header class="top">
+      <button class="btn btn-ic burger" aria-label="Menú" onclick="toggleSide(true)"><i class="fas fa-bars"></i></button>
+      <div><h1 id="topTitulo">Dashboard</h1><div class="sub" id="topSub"></div></div>
+      <div class="acts"><button class="btn btn-sm" onclick="recargarTab()"><i class="fas fa-rotate"></i><span class="hide-sm">Actualizar</span></button></div>
+    </header>
+    <div class="page">
+
+<!-- ═════════ DASHBOARD ═════════ -->
+<section class="tab" id="tab-dashboard">
+  <div class="card filters">
+    <label class="fld">Transportadora<select class="sel" id="dTrans"></select></label>
+    <label class="fld">Estado<select class="sel" id="dEstado"></select></label>
+    <label class="fld">Tipo de fecha<select class="sel" id="dTipoFecha"><option value="solicitud">Fecha de solicitud</option><option value="gestion">Fecha de gestión</option></select></label>
+    <label class="fld">Desde<input type="date" class="inp" id="dIni"></label>
+    <label class="fld">Hasta<input type="date" class="inp" id="dFin"></label>
+    <label class="fld">Ciudad<input type="text" class="inp" id="dCiudad" placeholder="Ciudad o bodega"></label>
+    <button class="btn" onclick="limpiarDash()"><i class="fas fa-xmark"></i> Limpiar</button>
+    <button class="btn btn-p" onclick="cargarDash()"><i class="fas fa-filter"></i> Aplicar</button>
+  </div>
+  <div id="dMigra"></div>
+  <div class="grid g-kpi" id="dKpis"></div>
+  <div class="card">
+    <div class="card-h"><h3>Estado de solicitudes</h3><div class="r small muted" id="dSuma"></div></div>
+    <div style="padding:10px 20px 16px" id="dEstados"></div>
+  </div>
+  <div class="grid g-2">
+    <div class="card"><div class="card-h"><h3>Novedades por transportadora</h3></div><div style="padding:14px 18px"><div class="chart-box"><canvas id="chTrans"></canvas></div></div></div>
+    <div class="card"><div class="card-h"><h3 id="chDiaT">Solicitudes por día</h3></div><div style="padding:14px 18px"><div class="chart-box"><canvas id="chDia"></canvas></div></div></div>
+  </div>
+  <div class="grid g-3">
+    <div class="card"><div class="card-h"><h3>Tipo de novedad</h3></div><div style="padding:6px 20px 12px" class="list-kv" id="dTipos"></div></div>
+    <div class="card"><div class="card-h"><h3>Categoría proveedor</h3></div><div style="padding:14px 18px"><div class="chart-box" style="height:230px"><canvas id="chCat"></canvas></div></div></div>
+    <div class="card"><div class="card-h"><h3>Marcas blancas</h3></div><div style="padding:6px 20px 12px" class="list-kv" id="dMarcas"></div></div>
+  </div>
+  <div class="grid g-3">
+    <div class="card"><div class="card-h"><h3>Top bodegas con más novedades</h3></div><div style="padding:6px 20px 12px" class="list-kv" id="dBodegas"></div></div>
+    <div class="card"><div class="card-h"><h3>Por departamento</h3></div><div style="padding:6px 20px 12px" class="list-kv" id="dDeptos"></div></div>
+    <div class="card staff-only"><div class="card-h"><h3>Rendimiento por asesor</h3><div class="r"><input type="date" class="inp" id="dRendFecha" style="height:34px" onchange="cargarRendimiento()" aria-label="Fecha de gestión"></div></div><div style="padding:6px 20px 12px" class="list-kv" id="dRend"></div></div>
+  </div>
+  <div class="card"><div class="card-h"><h3>Bodega Dropi por ciudad</h3></div><div class="grid g-kpi" style="padding:16px 18px" id="dBodCiudad"></div></div>
+</section>
+
+<!-- ═════════ INGRESO ═════════ -->
+<section class="tab" id="tab-ingreso">
+  <div class="card filters">
+    <label class="fld">Transportadora<select class="sel" id="iTrans"></select></label>
+    <label class="fld">Fecha de solicitud<input type="date" class="inp" id="iFecha"></label>
+    <div class="small muted" style="align-self:center">¿Ya tiene solución? <a href="#" onclick="irTab('buscador');return false">Búsquela antes de subir</a>.</div>
+  </div>
+  <div class="grid g-3">
+    <div class="card p" style="display:flex;flex-direction:column;gap:10px">
+      <span class="stepn">PASO 1</span><b style="font-size:15px">Descargue la plantilla</b>
+      <span class="muted small">Una fila por guía. Así cada dato queda con su guía y nada se corre.</span>
+      <button class="btn" onclick="descargarPlantilla()"><i class="fas fa-file-arrow-down"></i> Descargar plantilla Excel</button>
+    </div>
+    <div class="drop" id="iDrop">
+      <span class="stepn">PASO 2</span><b style="font-size:15px">Suba el Excel o CSV lleno</b>
+      <span class="muted small" id="iArchivoTxt">Arrastre el archivo aquí o selecciónelo.</span>
+      <input type="file" id="iArchivo" accept=".xlsx,.xls,.csv" class="hidden" onchange="leerArchivoIngreso(this.files[0])">
+      <button class="btn btn-p" onclick="document.getElementById('iArchivo').click()"><i class="fas fa-upload"></i> Seleccionar archivo</button>
+    </div>
+    <div class="card p" style="display:flex;flex-direction:column;gap:8px">
+      <span class="stepn">O PEGUE DESDE EXCEL</span>
+      <textarea class="inp" id="iPegar" rows="4" placeholder="Copie las filas de Excel con los encabezados de la plantilla y péguelas aquí"></textarea>
+      <button class="btn" onclick="leerPegado()"><i class="fas fa-paste"></i> Revisar lo pegado</button>
+    </div>
+  </div>
+  <div id="iRevision"></div>
+</section>
+
+<!-- ═════════ CRUCE DROPI ═════════ -->
+<section class="tab" id="tab-cruce">
+  <div class="grid g-3">
+    <div class="drop" id="cDrop">
+      <span class="stepn">PASO 1</span><b style="font-size:15px">Suba el reporte exportado de Dropi</b>
+      <span class="muted small" id="cArchivoTxt">.xlsx o .csv con la columna NÚMERO GUÍA</span>
+      <input type="file" id="cArchivo" accept=".xlsx,.xls,.csv" class="hidden" onchange="leerCruce(this.files[0])">
+      <button class="btn btn-p" onclick="document.getElementById('cArchivo').click()"><i class="fas fa-upload"></i> Seleccionar archivo</button>
+    </div>
+    <div class="card p"><b>Campos que se llenan</b><p class="muted small" style="margin-top:6px">Estatus Dropi · ID bodega · Email proveedor · Categoría · Teléfono proveedor · Teléfono tienda · Marca blanca · Ciudad · Departamento · Dirección antigua. Solo se escriben los campos que traiga el archivo; nunca se borra un dato con una celda vacía.</p></div>
+    <div class="card p" id="cResumen"><b>Resultado del cruce</b><p class="muted small" style="margin-top:6px">Aún no hay archivo.</p></div>
+  </div>
+  <div id="cTabla"></div>
+</section>
+
+<!-- ═════════ BUSCADOR ═════════ -->
+<section class="tab" id="tab-buscador">
+  <div class="card p" style="display:flex;flex-direction:column;gap:14px">
+    <div class="sec-t">Buscar por</div>
+    <div class="chips" id="bCampos"></div>
+    <label class="fld">Valores a buscar <span class="muted" style="font-weight:500">· uno por línea, hasta <span id="bMax">500</span></span><textarea class="inp" id="bValores" rows="5" placeholder="Número de guía, ID bodega, teléfono…"></textarea></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-p" onclick="buscarSol()"><i class="fas fa-magnifying-glass"></i> Buscar</button><button class="btn" onclick="document.getElementById('bValores').value='';document.getElementById('bRes').innerHTML=''">Limpiar</button></div>
+    <div class="alert info"><i class="fas fa-shield-halved"></i><div>Solo se muestran soluciones ya notificadas o culminadas. Por privacidad no se muestra el número de guía ni la transportadora de la solución.</div></div>
+  </div>
+  <div id="bRes"></div>
+</section>
+
+<!-- ═════════ GESTIÓN ═════════ -->
+<section class="tab" id="tab-gestion">
+  <div class="card filters" id="gFiltros">
+    <label class="fld grow">Buscar varias guías<input class="inp" id="gTexto" placeholder="Separadas por coma o espacio" onkeydown="if(event.key==='Enter')cargarGestion(1)"></label>
+    <label class="fld">Transportadora<select class="sel" id="gTrans"></select></label>
+    <label class="fld staff-only">ID bodega<select class="sel" id="gBodega"><option value="">Todas</option><option value="CON_ID">Con ID</option><option value="SIN_ID">Sin ID</option></select></label>
+    <label class="fld staff-only">Categoría<select class="sel" id="gCat"><option value="">Todas</option><option>NO VERIFICADO</option><option>VERIFICADO</option><option>PREMIUM</option><option>PREMIUM EXCLUSIVO</option><option value="GOEVERY">GoEvery</option><option value="MARCA_BLANCA">Marca blanca</option></select></label>
+    <label class="fld">Mes captura (Envía)<input type="month" class="inp" id="gCaptura"></label>
+    <label class="fld">Depto<input class="inp" id="gDepto" style="width:120px"></label>
+    <label class="fld">Ciudad<input class="inp" id="gCiudad" style="width:120px"></label>
+    <label class="fld">Tipo de fecha<select class="sel" id="gTipoFecha"><option value="solicitud">Solicitud</option><option value="gestion">Gestión</option></select></label>
+    <label class="fld">Desde<input type="date" class="inp" id="gIni"></label>
+    <label class="fld">Hasta<input type="date" class="inp" id="gFin"></label>
+    <label class="fld">Por página<select class="sel" id="gPorPag"><option value="20">20 bodegas</option><option value="50">50 bodegas</option><option value="100">100 bodegas</option></select></label>
+    <button class="btn" onclick="limpiarGestion()"><i class="fas fa-xmark"></i></button>
+    <button class="btn btn-p" onclick="cargarGestion(1)"><i class="fas fa-filter"></i> Filtrar</button>
+    <button class="btn" onclick="exportarGestion()"><i class="fas fa-file-excel"></i> Exportar</button>
+  </div>
+  <div class="chips" id="gBandejas"></div>
+  <div id="gLista"></div>
+  <div class="bulk hidden" id="gBulk"></div>
+</section>
+
+<!-- ═════════ COMERCIAL ═════════ -->
+<section class="tab" id="tab-comercial">
+  <div class="card filters">
+    <label class="fld grow">Buscar guías<input class="inp" id="kTexto" onkeydown="if(event.key==='Enter')cargarComercial(1)"></label>
+    <label class="fld staff-only">Categoría<select class="sel" id="kCat"><option value="">Todas</option><option>PREMIUM</option><option>PREMIUM EXCLUSIVO</option><option>VERIFICADO</option><option>NO VERIFICADO</option></select></label>
+    <button class="btn btn-p" onclick="cargarComercial(1)"><i class="fas fa-filter"></i> Filtrar</button>
+  </div>
+  <div class="grid g-kpi" id="kKpis"></div>
+  <div id="kLista"></div>
+</section>
+
+<!-- ═════════ WHATSAPP ═════════ -->
+<section class="tab" id="tab-whatsapp">
+  <div class="card filters">
+    <label class="fld">ID bodega<input class="inp" id="wBod" placeholder="Filtrar ID bodega" onkeydown="if(event.key==='Enter')cargarWsp()"></label>
+    <label class="fld">Estado<select class="sel" id="wEstado"><option value="">Todos los activos</option></select></label>
+    <label class="fld">Transportadora<select class="sel" id="wTrans"></select></label>
+    <label class="fld">Categoría<select class="sel" id="wCat"><option value="">Todas</option><option>PREMIUM</option><option>PREMIUM EXCLUSIVO</option><option>VERIFICADO</option><option>NO VERIFICADO</option></select></label>
+    <button class="btn btn-p" onclick="cargarWsp()"><i class="fas fa-filter"></i> Filtrar</button>
+  </div>
+  <div class="alert warn" id="wContador"></div>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+    <div class="card" style="flex:3 1 480px;min-width:0"><div class="card-h"><h3>Cola de envío</h3><div class="r small muted" id="wTotal"></div></div><div id="wCola" class="tblw" style="max-height:640px;overflow:auto"></div></div>
+    <div class="card p" style="flex:2 1 360px;min-width:0;display:flex;flex-direction:column;gap:12px" id="wPrev"><div class="empty"><i class="fab fa-whatsapp"></i>Elige una bodega de la cola.</div></div>
+  </div>
+</section>
+
+<!-- ═════════ CORREOS ═════════ -->
+<section class="tab" id="tab-correos">
+  <div class="card p" style="display:flex;flex-direction:column;gap:16px">
+    <div class="sec-t">Tipo de envío</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px" id="mTipos"></div>
+    <div class="filters" style="padding:0">
+      <label class="fld">Transportadora<select class="sel" id="mTrans"></select></label>
+      <label class="fld" id="mBodWrap">Bodega Dropi destino<select class="sel" id="mBod"></select></label>
+      <label class="fld">Desde (fecha gestión)<input type="date" class="inp" id="mIni"></label>
+      <label class="fld">Hasta<input type="date" class="inp" id="mFin"></label>
+      <label class="fld">Depto<input class="inp" id="mDepto" style="width:140px"></label>
+      <label class="fld">Ciudad<input class="inp" id="mCiudad" style="width:140px"></label>
+    </div>
+    <div class="filters" style="padding:0">
+      <label class="fld grow">Para<input class="inp" id="mPara" placeholder="correo@transportadora.com"></label>
+      <label class="fld grow">CC<input class="inp" id="mCC" placeholder="Otros correos, separados por coma"></label>
+    </div>
+    <div class="alert info"><i class="fas fa-signature"></i><div>El correo sale con tu nombre como remitente; las respuestas te llegan directo y vas en copia.</div></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" onclick="previaCorreo()"><i class="fas fa-eye"></i> Vista previa</button><button class="btn btn-p" onclick="enviarCorreo()"><i class="fas fa-paper-plane"></i> Enviar correo</button></div>
+  </div>
+  <div id="mPrevia"></div>
+</section>
+
+<!-- ═════════ BODEGA ═════════ -->
+<section class="tab" id="tab-bodega">
+  <div class="scan">
+    <label for="oScan" style="font-weight:800;font-size:15px">Escanee la guía con la pistola o escríbala y presione Enter</label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input id="oScan" class="inp" style="flex:1 1 320px" placeholder="Guía inicial o reemplazatoria" autocomplete="off" inputmode="numeric">
+      <button class="btn" style="height:66px" onclick="abrirCamara()"><i class="fas fa-camera"></i> Cámara</button>
+      <button class="btn" style="height:66px" onclick="document.getElementById('oFoto').click()"><i class="fas fa-image"></i> Foto</button>
+      <input type="file" id="oFoto" accept="image/*" capture="environment" class="hidden" onchange="leerFoto(this)">
+    </div>
+    <div id="camWrap" class="hidden" style="display:flex;flex-direction:column;gap:8px"><div id="camBox"></div><div style="display:flex;gap:8px;align-items:center"><span class="small muted" id="camTxt">Iniciando cámara…</span><button class="btn btn-sm" onclick="cerrarCamara()">Cerrar cámara</button></div></div>
+    <div id="fotoTmp" class="hidden"></div>
+    <span class="small muted">El campo queda listo para la siguiente lectura. Solo se reciben guías que Dropi notificó para esta bodega.</span>
+  </div>
+  <div class="grid g-kpi" id="oKpis"></div>
+  <div class="grid g-2">
+    <div id="oResultado"><div class="res info"><span class="k">LISTO PARA ESCANEAR</span><span class="c">—</span><span>El resultado aparece aquí al instante.</span></div></div>
+    <div class="card p"><div class="sec-t" style="margin-bottom:10px">Lecturas de este turno <span class="muted" id="oCont"></span></div><div class="feed" id="oFeed"><span class="muted small">Sin lecturas todavía.</span></div></div>
+  </div>
+  <div class="card filters">
+    <label class="fld staff-only">Bodega Dropi<select class="sel" id="oCiudad"></select></label>
+    <label class="fld">Transportadora<select class="sel" id="oTrans"></select></label>
+    <label class="fld">Guía inicial o reemplazatoria<input class="inp" id="oGuia"></label>
+    <label class="fld">Estado bodega<select class="sel" id="oEstado"></select></label>
+    <label class="fld">Desde<input type="date" class="inp" id="oIni"></label>
+    <label class="fld">Hasta<input type="date" class="inp" id="oFin"></label>
+    <label class="fld">ID bodega proveedor<input class="inp" id="oIdBod" style="width:130px"></label>
+    <button class="btn btn-p" onclick="cargarBodega(1)"><i class="fas fa-filter"></i> Filtrar</button>
+    <button class="btn" onclick="exportarBodega()"><i class="fas fa-file-excel"></i> Exportar</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+    <div class="card" style="flex:3 1 520px;min-width:0" id="oTabla"></div>
+    <div class="card p" style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:10px">
+      <label class="sec-t" for="oMasiva">Búsqueda masiva</label>
+      <span class="small muted">Si la pistola falla: pegue o escriba varias guías, una por línea.</span>
+      <textarea class="inp" id="oMasiva" rows="7"></textarea>
+      <button class="btn" onclick="revisarMasiva()"><i class="fas fa-list-check"></i> Revisar</button>
+      <div id="oMasivaRes"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ RECHAZOS ═════════ -->
+<section class="tab" id="tab-rechazos">
+  <div class="alert info"><i class="fas fa-circle-info"></i><div>Guías que una Bodega Dropi leyó y no estaban notificadas para ella. La bodega no las recibe hasta que se resuelvan aquí.</div></div>
+  <div class="chips" id="rFiltro"></div>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+    <div class="card" style="flex:3 1 520px;min-width:0" id="rTabla"></div>
+    <div class="card p" style="flex:2 1 340px;min-width:0;display:flex;flex-direction:column;gap:12px" id="rPanel"><div class="empty"><i class="fas fa-hand-pointer"></i>Elige un rechazo de la lista.</div></div>
+  </div>
+</section>
+
+<!-- ═════════ INDEMNIZACIONES ═════════ -->
+<section class="tab" id="tab-indemnizacion">
+  <div class="card filters">
+    <label class="fld">Transportadora<select class="sel" id="nTrans"></select></label>
+    <label class="fld">Estado de la guía<select class="sel" id="nEstadoGuia"></select></label>
+    <label class="fld">Mes<input type="month" class="inp" id="nMes"></label>
+    <label class="fld">Bodega Dropi<select class="sel" id="nCiudad"></select></label>
+    <label class="fld">Estado del cobro<select class="sel" id="nEstadoCobro"><option value="">Todos</option><option>Pendiente de cobro</option><option>Cobrado al proveedor</option></select></label>
+    <label class="fld">ID bodega<input class="inp" id="nBod" style="width:120px"></label>
+    <button class="btn btn-p" onclick="cargarIndem(1)"><i class="fas fa-filter"></i> Filtrar</button>
+    <button class="btn" onclick="exportarIndem()"><i class="fas fa-file-excel"></i> Exportar</button>
+    <button class="btn" onclick="sincronizarIndem()"><i class="fas fa-arrows-rotate"></i> Sincronizar</button>
+  </div>
+  <div class="grid g-kpi" id="nKpis"></div>
+  <div class="grid g-2">
+    <div class="card"><div class="card-h"><h3>Evolución mensual</h3></div><div style="padding:14px 18px"><div class="chart-box"><canvas id="chIndem"></canvas></div></div></div>
+    <div class="card"><div class="card-h"><h3>Por transportadora</h3></div><div class="tblw" id="nTransTbl"></div></div>
+  </div>
+  <div class="card" id="nTabla"></div>
+  <div class="card"><div class="card-h"><h3>En periodo de gracia</h3><div class="r small muted">Recibidas este mes: el primer cobro se genera al cumplir el mes</div></div><div class="tblw" id="nGracia"></div></div>
+</section>
+
+<!-- ═════════ CONFIGURACIÓN ═════════ -->
+<section class="tab" id="tab-config">
+  <div class="card"><div class="card-h"><h3>Usuarios y accesos</h3><div class="r"><input class="inp" id="uBuscar" placeholder="Buscar usuario" oninput="renderUsuarios()" style="height:36px"><button class="btn btn-p btn-sm" onclick="editarUsuario(null)"><i class="fas fa-user-plus"></i> Agregar usuario</button></div></div><div class="tblw" id="uTabla" style="max-height:520px;overflow:auto"></div></div>
+  <div class="grid g-2">
+    <div class="card"><div class="card-h"><h3>Bodegas Dropi</h3><div class="r"><button class="btn btn-sm" onclick="editarBodega(null)"><i class="fas fa-plus"></i> Agregar</button></div></div><div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px" id="cfgBodegas"></div></div>
+    <div class="card"><div class="card-h"><h3>Parámetros</h3></div><div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px" id="cfgParams"></div></div>
+  </div>
+  <div class="card p" style="border:2px solid var(--brand-line);display:flex;flex-direction:column;gap:12px">
+    <h3 style="font-size:16px">Actualizar estructura y estados</h3>
+    <p class="muted small">Crea las pestañas y columnas nuevas y pasa los estados viejos a los nuevos. Primero hace una copia de seguridad del archivo en tu Drive. Si se corre dos veces no duplica nada.</p>
+    <div id="cfgMigra"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" onclick="previaMigracion()"><i class="fas fa-eye"></i> 1. Ver qué va a cambiar</button><button class="btn btn-p" onclick="aplicarMigracion()"><i class="fas fa-wand-magic-sparkles"></i> 2. Hacer copia y aplicar</button></div>
+  </div>
+  <div class="card p" style="display:flex;flex-direction:column;gap:10px">
+    <h3 style="font-size:16px">Asistente IA (opcional)</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><input class="inp" type="password" id="cfgGemini" placeholder="API Key de Google Gemini" style="flex:1 1 280px"><button class="btn" onclick="guardarGemini()">Guardar</button></div>
+    <span class="small muted" id="cfgGeminiTxt"></span>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-sm" onclick="repararIndem()"><i class="fas fa-screwdriver-wrench"></i> Reparar cobros duplicados de indemnización</button></div>
+  </div>
+</section>
+
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="cerrarCapas()"></div>
+<aside class="drawer" id="drawer" aria-label="Detalle"></aside>
+<div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  NÚCLEO
+// ════════════════════════════════════════════════════════════
+const E = { PENDIENTE:'Pendiente', GEST_LOG:'En gestión logística', GEST_COM:'En gestión comercial', COM_SIN:'Comercial sin contacto', SOL_LISTA:'Solución lista - por notificar', BOD_LISTA:'Para Bodega Dropi - por notificar', RECH_LISTA:'Rechazada - por notificar', SOL_NOTIF:'Solución notificada', BOD_NOTIF:'Bodega Dropi notificada', RECH_NOTIF:'Rechazada notificada', CULM_ENT:'Culminado - entregado al proveedor', CULM_BOD:'Culminado - en Bodega Dropi' };
+const EB = { TRANSITO:'En tránsito a bodega', RECIBIDO:'Recibido en Bodega', RETIRADO:'Retirado por el proveedor', REENVIADO:'Reenviado al proveedor' };
+const COLOR = { [E.PENDIENTE]:['#F3F4F6','#374151','#9CA3AF'], [E.GEST_LOG]:['#EFF6FF','#1E40AF','#2563EB'], [E.GEST_COM]:['#F5F3FF','#5B21B6','#7C3AED'], [E.COM_SIN]:['#FAF5FF','#6B21A8','#A78BFA'], [E.SOL_LISTA]:['#FFFBEB','#92400E','#D97706'], [E.BOD_LISTA]:['#FFF7ED','#9A3412','#F59E0B'], [E.RECH_LISTA]:['#FEF2F2','#991B1B','#F87171'], [E.SOL_NOTIF]:['#ECFEFF','#155E75','#0891B2'], [E.BOD_NOTIF]:['#ECFEFF','#164E63','#0E7490'], [E.RECH_NOTIF]:['#FEF2F2','#7F1D1D','#DC2626'], [E.CULM_ENT]:['#ECFDF5','#065F46','#059669'], [E.CULM_BOD]:['#ECFDF5','#064E3B','#047857'], [EB.TRANSITO]:['#FFF7ED','#9A3412','#F59E0B'], [EB.RECIBIDO]:['#ECFDF5','#065F46','#059669'], [EB.RETIRADO]:['#F3F4F6','#374151','#9CA3AF'], [EB.REENVIADO]:['#F3F4F6','#374151','#9CA3AF'], 'Pendiente de cobro':['#FFF7ED','#9A3412','#F59E0B'], 'Cobrado al proveedor':['#ECFDF5','#065F46','#059669'], 'Por resolver':['#FEF2F2','#991B1B','#DC2626'], 'Vinculada':['#ECFDF5','#065F46','#059669'], 'No recibir':['#F3F4F6','#374151','#9CA3AF'] };
+const TABS = { dashboard:['Dashboard','fa-chart-pie','Visión general'], ingreso:['Ingreso y carga','fa-cloud-arrow-up','Operación'], cruce:['Cruzar Excel Dropi','fa-code-merge','Operación'], buscador:['Buscador de soluciones','fa-magnifying-glass','Operación'], gestion:['Gestión y solución','fa-list-check','Operación'], comercial:['Comercial','fa-handshake','Operación'], whatsapp:['WhatsApp','fa-brands fa-whatsapp','Comunicación'], correos:['Correos a transportadoras','fa-envelope-open-text','Comunicación'], bodega:['Bodega Dropi','fa-warehouse','Bodega'], rechazos:['Guías rechazadas en bodega','fa-triangle-exclamation','Bodega'], indemnizacion:['Indemnizaciones','fa-sack-dollar','Bodega'], config:['Configuración','fa-gear','Administración'] };
+const SUBT = { dashboard:'Métricas en vivo de todas las novedades', ingreso:'Suba las novedades por plantilla, una fila por guía', cruce:'Complete los datos del proveedor con el reporte de Dropi', buscador:'Revise si el proveedor ya tiene una solución antes de subir', gestion:'Por defecto solo se ve lo pendiente, agrupado por bodega del proveedor', comercial:'Guías que Gestión pasó a comercial, según tu categoría', whatsapp:'Un mensaje por proveedor con todas sus guías activas', correos:'Envíe soluciones, envíos a bodega y rechazos', bodega:'Solo se reciben guías notificadas por Dropi para esta bodega', rechazos:'Resuelva guías que llegaron sin estar notificadas', indemnizacion:'Cobro mensual por guía recibida en Bodega Dropi', config:'Usuarios, bodegas, parámetros y mantenimiento' };
+const S = { u:null, ini:null, tab:'', charts:{}, gest:{ pagina:1, bandeja:null, data:null, sel:new Set() }, bod:{ indice:new Map(), cola:[], feed:[], pagina:1, sel:new Set() }, indem:{ pagina:1, sel:new Set() }, cfg:null, rech:{ estado:'Por resolver', rows:[] }, wsp:{ data:null, actual:null } };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s === null || s === undefined ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+const num = n => Number(n || 0).toLocaleString('es-CO');
+const peso = n => '$' + Number(n || 0).toLocaleString('es-CO');
+const token = () => $('sesion_frontend').value;
+const staff = () => S.u && (S.u.rol === 'Admin' || S.u.rol === 'Gestión');
+const hoyISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+const normCode = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const sinCeros = s => s.replace(/^0+/, '');
+
+function gs(fn, ...args) {
+  return new Promise((resolve, reject) => {
+    google.script.run.withSuccessHandler(r => {
+      if (r && r.ok === false && /REQUIRES_FALLBACK_LOGIN|no está registrado|inactivo/.test(r.msg || '')) { mostrarError(r.msg); return reject(new Error(r.msg)); }
+      resolve(r);
+    }).withFailureHandler(e => { toast((e && e.message) || 'Error de conexión', 'bad'); reject(e); })[fn](...args, token());
+  });
+}
+function toast(msg, tipo) {
+  const ic = { ok:'fa-circle-check', bad:'fa-circle-exclamation', warn:'fa-triangle-exclamation' }[tipo] || 'fa-circle-info';
+  const d = document.createElement('div'); d.className = tipo || ''; d.innerHTML = `<i class="fas ${ic}"></i><span>${esc(msg)}</span>`;
+  $('toast').appendChild(d); setTimeout(() => d.remove(), tipo === 'bad' ? 6000 : 3800);
+}
+function badge(e) { const c = COLOR[e] || ['#F3F4F6', '#374151']; return `<span class="badge" style="background:${c[0]};color:${c[1]}">${esc(e)}</span>`; }
+function cargando(id, txt) { $(id).innerHTML = `<div class="empty"><i class="fas fa-circle-notch fa-spin"></i>${esc(txt || 'Cargando…')}</div>`; }
+function vacio(txt, ic) { return `<div class="empty"><i class="fas ${ic || 'fa-inbox'}"></i>${esc(txt)}</div>`; }
+function opciones(lista, primera) { return (primera !== undefined ? `<option value="">${esc(primera)}</option>` : '') + lista.map(x => typeof x === 'object' ? `<option value="${esc(x.v)}">${esc(x.t)}</option>` : `<option value="${esc(x)}">${esc(x)}</option>`).join(''); }
+function btnCargando(btn, on, txt) { if (!btn) return; if (on) { btn.dataset.o = btn.innerHTML; btn.disabled = true; btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${esc(txt || 'Procesando…')}`; } else { btn.disabled = false; if (btn.dataset.o) btn.innerHTML = btn.dataset.o; } }
+function descargarB64(b64, nombre, tipo) { const bin = atob(b64); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([arr], { type: tipo || 'text/csv;charset=utf-8' })); a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); }
+function abrirDrawer(html) { $('drawer').innerHTML = html; $('drawer').classList.add('on'); $('scrim').classList.add('on'); }
+function abrirModal(html) { $('modal').innerHTML = html; $('modal').classList.add('on'); $('scrim').classList.add('on'); }
+function cerrarCapas() { $('drawer').classList.remove('on'); $('modal').classList.remove('on'); $('scrim').classList.remove('on'); }
+function confirmar(titulo, texto, okTxt) {
+  return new Promise(res => {
+    abrirModal(`<div class="drawer-h"><h3>${esc(titulo)}</h3></div><div class="drawer-b"><p style="font-size:14px;color:var(--ink2)">${texto}</p></div><div class="drawer-f"><button class="btn" id="cfNo">Cancelar</button><button class="btn btn-p" id="cfSi">${esc(okTxt || 'Confirmar')}</button></div>`);
+    $('cfNo').onclick = () => { cerrarCapas(); res(false); }; $('cfSi').onclick = () => { cerrarCapas(); res(true); };
+  });
+}
+function toggleSide(on) { $('side').classList.toggle('on', on); $('scrimSide').classList.toggle('on', on); }
+
+// ── Acceso ──
+function pedirOTP() {
+  const em = $('loginEmail').value.trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { toast('Escribe un correo válido', 'warn'); return; }
+  const b = $('btnOtp'); btnCargando(b, true, 'Enviando…');
+  google.script.run.withSuccessHandler(r => { btnCargando(b, false); if (r.ok) { $('paso1').classList.add('hidden'); $('paso2').classList.remove('hidden'); $('paso2').style.display = 'flex'; $('loginTxt').textContent = 'Escribe el código de 6 dígitos que enviamos a ' + em; $('loginOtp').focus(); } else toast(r.msg, 'bad'); })
+    .withFailureHandler(e => { btnCargando(b, false); toast(e.message, 'bad'); }).solicitarAccesoOTP(em);
+}
+function verificarOTP() {
+  const em = $('loginEmail').value.trim(), otp = $('loginOtp').value.trim(); if (!/^\d{6}$/.test(otp)) { toast('El código tiene 6 dígitos', 'warn'); return; }
+  const b = $('btnVerificar'); btnCargando(b, true, 'Validando…');
+  google.script.run.withSuccessHandler(r => { if (r.ok) { $('sesion_frontend').value = r.token; try { google.script.history.replace(null, null, 'sid=' + r.token); } catch (e) {} $('gateLogin').classList.add('hidden'); arrancar(); } else { btnCargando(b, false); toast(r.msg, 'bad'); } })
+    .withFailureHandler(e => { btnCargando(b, false); toast(e.message, 'bad'); }).validarCodigoOTP(em, otp);
+}
+function volverPaso1() { $('paso2').classList.add('hidden'); $('paso1').classList.remove('hidden'); $('loginTxt').textContent = 'Ingresa tu correo corporativo. Te enviaremos un código de seguridad.'; }
+function salir() { try { google.script.run.cerrarSesion(token()); } catch (e) {} let url = "<?= ScriptApp.getService().getUrl() ?>"; url = url.replace('/a/dropi.co', ''); window.top.location.href = url; }
+function mostrarError(msg) { $('gateLoad').classList.add('hidden'); $('app').classList.add('hidden'); $('gateError').classList.remove('hidden'); $('errorMsg').textContent = msg === 'REQUIRES_FALLBACK_LOGIN' ? 'Tu sesión venció. Vuelve a ingresar.' : msg; }
+
+window.addEventListener('load', () => {
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarCapas(); });
+  const go = sid => { if (sid) { $('sesion_frontend').value = sid; const g = $('gateLogin'); if (g) g.classList.add('hidden'); arrancar(); } else { const g = $('gateLogin'); if (g) g.classList.remove('hidden'); else mostrarError('REQUIRES_FALLBACK_LOGIN'); } };
+  try {
+    google.script.url.getLocation(loc => {
+      let sid = token();
+      if (loc && loc.hash && loc.hash.indexOf('sid=') >= 0) sid = loc.hash.split('sid=')[1].split('&')[0];
+      else if (loc && loc.parameters && loc.parameters.sid) sid = loc.parameters.sid[0];
+      go(sid);
+    });
+  } catch (e) { go(token()); }
+  ['loginEmail', 'loginOtp'].forEach(id => { const el = $(id); if (el) el.addEventListener('keydown', ev => { if (ev.key === 'Enter') (id === 'loginEmail' ? pedirOTP : verificarOTP)(); }); });
+});
+
+function arrancar() {
+  $('gateLoad').classList.remove('hidden');
+  google.script.run.withSuccessHandler(r => {
+    if (!r || r.error) { mostrarError((r && r.error) || 'Error desconocido'); return; }
+    S.ini = r; S.u = r.usuario;
+    $('meNombre').textContent = S.u.nombre; $('meRol').textContent = S.u.rol + (S.u.rol === 'Transportadora' ? ' · ' + S.u.transportadora : S.u.rol === 'Bodega Dropi' ? ' · ' + S.u.sede : '');
+    $('meIni').textContent = S.u.nombre.split(/\s+/).map(x => x[0]).slice(0, 2).join('').toUpperCase();
+    document.querySelectorAll('.staff-only').forEach(el => el.classList.toggle('hidden', !staff()));
+    construirNav(); poblarSelects();
+    $('gateLoad').classList.add('hidden'); $('app').classList.remove('hidden');
+    irTab(S.u.tabs[0]);
+  }).withFailureHandler(e => mostrarError(e.message)).getDatosIniciales(token());
+}
+function construirNav() {
+  let sec = '', html = '';
+  S.u.tabs.forEach(t => {
+    const d = TABS[t]; if (!d) return;
+    if (d[2] !== sec) { sec = d[2]; html += `<div class="nav-sec">${esc(sec)}</div>`; }
+    const ic = d[1].indexOf('fa-brands') === 0 ? d[1] : 'fas ' + d[1];
+    const nombre = (t === 'gestion' && S.u.rol === 'Transportadora') ? 'Mis guías y confirmaciones' : (t === 'comercial' && S.u.rol === 'Comercial') ? 'Mi bandeja comercial' : (t === 'bodega' && S.u.rol === 'Bodega Dropi') ? 'Bodega Dropi · ' + S.u.sede : d[0];
+    html += `<button id="nav-${t}" onclick="irTab('${t}')"><i class="${ic}"></i><span>${esc(nombre)}</span>${t === 'rechazos' ? '<span class="cnt hidden" id="cntRech"></span>' : ''}</button>`;
+  });
+  $('nav').innerHTML = html;
+}
+function poblarSelects() {
+  const tr = S.ini.transportadoras, ests = S.ini.estados, bods = S.ini.bodegasDropi;
+  ['dTrans', 'gTrans', 'wTrans', 'oTrans', 'nTrans'].forEach(id => $(id).innerHTML = opciones(tr, 'Todas'));
+  $('iTrans').innerHTML = opciones(tr, 'Seleccionar…'); $('mTrans').innerHTML = opciones(tr, 'Seleccionar…');
+  $('dEstado').innerHTML = opciones(ests, 'Todos los estados');
+  $('wEstado').innerHTML = opciones(S.u.rol === 'Comercial' ? [E.GEST_COM] : [E.PENDIENTE, E.GEST_LOG, E.COM_SIN], 'Todos los activos');
+  const bOpts = bods.map(b => ({ v: b.ciudad, t: b.ciudad }));
+  $('mBod').innerHTML = opciones(bOpts, 'Seleccionar…'); $('oCiudad').innerHTML = opciones(bOpts, 'Todas'); $('nCiudad').innerHTML = opciones(bOpts, 'Todas');
+  $('oEstado').innerHTML = opciones(S.ini.estadosBodega, 'Todos'); $('nEstadoGuia').innerHTML = opciones(S.ini.estadosBodega.filter(x => x !== EB.TRANSITO), 'Todos');
+  $('bMax').textContent = S.ini.parametros.MAX_BUSQUEDA;
+  if (S.u.rol === 'Transportadora') { ['iTrans', 'gTrans', 'dTrans'].forEach(id => { $(id).value = S.u.transportadora; $(id).disabled = true; }); }
+  $('iFecha').value = hoyISO();
+}
+function irTab(t) {
+  if (S.u.tabs.indexOf(t) < 0) return;
+  S.tab = t; toggleSide(false);
+  document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 'tab-' + t));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.id === 'nav-' + t));
+  const nav = $('nav-' + t); $('topTitulo').textContent = nav ? nav.textContent.replace(/\d+$/, '') : TABS[t][0]; $('topSub').textContent = SUBT[t] || '';
+  recargarTab();
+  if (t === 'bodega') setTimeout(() => $('oScan').focus(), 60);
+}
+function recargarTab() {
+  const t = S.tab;
+  ({ dashboard: () => { cargarDash(); cargarRendimiento(); }, gestion: () => cargarGestion(S.gest.pagina || 1), comercial: () => cargarComercial(1), whatsapp: cargarWsp, correos: initCorreos, bodega: () => cargarBodega(S.bod.pagina || 1), rechazos: cargarRechazos, indemnizacion: () => cargarIndem(1), config: cargarConfig, buscador: initBuscador, ingreso: () => {}, cruce: () => {} }[t] || (() => {}))();
+  if (staff() && t !== 'rechazos') gs('getRechazosBodega', { estado: 'Por resolver' }).then(r => { const c = $('cntRech'); if (c && r.ok) { c.textContent = r.porResolver; c.classList.toggle('hidden', !r.porResolver); } }).catch(() => {});
+}
+
+// ════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════
+function limpiarDash() { ['dEstado', 'dIni', 'dFin', 'dCiudad'].forEach(id => $(id).value = ''); if (S.u.rol !== 'Transportadora') $('dTrans').value = ''; $('dTipoFecha').value = 'solicitud'; cargarDash(); }
+function cargarDash() {
+  const f = { transportadora: $('dTrans').value, estado: $('dEstado').value, tipoFecha: $('dTipoFecha').value, fechaInicio: $('dIni').value, fechaFin: $('dFin').value, ciudad: $('dCiudad').value };
+  $('dKpis').style.opacity = .5;
+  gs('getMetricasFiltradas', f).then(r => { $('dKpis').style.opacity = 1; if (!r.ok) return toast(r.msg, 'bad'); pintarDash(r.stats, r.legado); });
+}
+function pintarDash(s, legado) {
+  $('dMigra').innerHTML = (legado && S.u.rol === 'Admin') ? `<div class="alert warn"><i class="fas fa-wand-magic-sparkles"></i><div><b>${num(legado)} registros todavía tienen estados viejos.</b> El sistema ya los muestra con los nombres nuevos; para guardarlos en la hoja ve a <a href="#" onclick="irTab('config');return false">Configuración → Actualizar estructura y estados</a>.</div></div>` : '';
+  const k = (l, v, sub, cls, ic, estado) => `<div class="card kpi ${cls || ''}" ${estado ? `style="cursor:pointer" onclick="verEstado('${esc(estado)}')"` : ''}><span class="ico"><i class="fas ${ic}"></i></span><span class="l">${l}</span><span class="v">${num(v)}</span><span class="s">${sub}</span></div>`;
+  $('dKpis').innerHTML = k('Total registros', s.total, num(s.unicas) + ' guías únicas · ' + num(s.reingresos) + ' reingresos', '', 'fa-layer-group')
+    + k('Pendientes', s.pendientes, 'Sin gestionar', '', 'fa-hourglass-half', E.PENDIENTE)
+    + k('En gestión', s.enGestion, num(s.porEstado[E.GEST_LOG]) + ' logística · ' + num(s.porEstado[E.GEST_COM]) + ' comercial', '', 'fa-headset', E.GEST_LOG)
+    + k('Notificadas sin confirmar', s.notificadasSinConfirmar, num(s.porEstado[E.SOL_NOTIF]) + ' soluciones · ' + num(s.porEstado[E.BOD_NOTIF]) + ' a bodega', 'hl', 'fa-bell', E.SOL_NOTIF)
+    + k('Rechazadas', s.rechazadas, num(s.porEstado[E.RECH_LISTA]) + ' por notificar · ' + num(s.porEstado[E.RECH_NOTIF]) + ' notificadas', 'bad', 'fa-ban', E.RECH_LISTA)
+    + k('Culminadas', s.culminadas, num(s.porEstado[E.CULM_ENT]) + ' entregadas · ' + num(s.porEstado[E.CULM_BOD]) + ' en bodega', 'ok', 'fa-circle-check', E.CULM_ENT);
+  const max = Math.max(1, ...Object.values(s.porEstado));
+  $('dSuma').textContent = 'Suma: ' + num(Object.values(s.porEstado).reduce((a, b) => a + b, 0));
+  $('dEstados').innerHTML = Object.keys(s.porEstado).map(e => { const c = (COLOR[e] || [, , '#9CA3AF'])[2]; const v = s.porEstado[e]; return `<div class="rowbar" onclick="verEstado('${esc(e)}')"><span class="n"><i style="background:${c}"></i>${esc(e)}</span><div class="bar"><i style="width:${v ? Math.max(1, v / max * 100) : 0}%;background:${c}"></i></div><span class="v">${num(v)}</span></div>`; }).join('');
+  const kv = (id, arr, pre) => $(id).innerHTML = arr.length ? arr.map(([n, v]) => `<div><span>${esc((pre || '') + n)}</span><b>${num(v)}</b></div>`).join('') : vacio('Sin datos');
+  kv('dTipos', s.topTipos.slice(0, 8)); kv('dMarcas', s.topMarcas.slice(0, 8)); kv('dBodegas', s.topBodegas.slice(0, 8), 'Bodega '); kv('dDeptos', s.topDeptos.slice(0, 8));
+  const bc = s.bodegaCiudad || {};
+  $('dBodCiudad').innerHTML = Object.keys(bc).length ? Object.keys(bc).map(c => `<div class="card kpi"><span class="l">${esc(c)}</span><span class="v">${num(bc[c].transito)}</span><span class="s">en tránsito · ${num(bc[c].recibidas)} en bodega · ${num(bc[c].cerradas)} retiradas/reenviadas</span></div>`).join('') : vacio('Sin guías en Bodega Dropi');
+  graficas(s);
+}
+function verEstado(e) { if (S.u.tabs.indexOf('gestion') < 0) return; S.gest.bandeja = e; irTab('gestion'); }
+function graficas(s) {
+  if (!window.Chart) return;
+  Object.values(S.charts).forEach(c => { try { c.destroy(); } catch (e) {} }); S.charts = {};
+  Chart.defaults.font.family = 'Inter, system-ui, sans-serif'; Chart.defaults.color = '#5B6576';
+  const grid = { color: '#F1F3F6' };
+  S.charts.t = new Chart($('chTrans'), { type: 'bar', data: { labels: s.topTransportadoras.map(x => x[0]), datasets: [{ data: s.topTransportadoras.map(x => x[1]), backgroundColor: '#FF7A1A', borderRadius: 8, maxBarThickness: 34 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid } } } });
+  S.charts.d = new Chart($('chDia'), { type: 'line', data: { labels: s.dias.map(x => x[0].slice(8, 10) + '/' + x[0].slice(5, 7)), datasets: [{ data: s.dias.map(x => x[1]), borderColor: '#E85D00', backgroundColor: 'rgba(255,122,26,.12)', fill: true, tension: .35, pointRadius: 3, pointBackgroundColor: '#E85D00' }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid, beginAtZero: true } } } });
+  const pal = ['#0F172A', '#FF7A1A', '#64748B', '#FDBA74', '#CBD5E1', '#9A3412', '#94A3B8', '#FED7AA'];
+  S.charts.c = new Chart($('chCat'), { type: 'doughnut', data: { labels: s.topCategorias.map(x => x[0]), datasets: [{ data: s.topCategorias.map(x => x[1]), backgroundColor: pal, borderWidth: 2, borderColor: '#fff' }] }, options: { maintainAspectRatio: false, cutout: '64%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, boxHeight: 10, font: { size: 11 } } } } } });
+}
+function cargarRendimiento() {
+  if (!staff()) return;
+  gs('getRendimientoAsesores', $('dRendFecha').value || '').then(r => {
+    if (!r.ok) return;
+    const arr = Object.entries(r.data).sort((a, b) => b[1].total - a[1].total).slice(0, 12);
+    $('dRend').innerHTML = arr.length ? arr.map(([n, d]) => `<div><span>${esc(n)}</span><b>${num(d.total)}</b></div>`).join('') : vacio('Sin gestiones en esa fecha');
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  INGRESO
+// ════════════════════════════════════════════════════════════
+const ING_COLS = [['GUIA', 'guia'], ['GUIA REEMPLAZATORIA', 'guiaRemp'], ['TIPO NOVEDAD', 'tipoNov'], ['ESTADO TRANSPORTADORA', 'estadoTrans'], ['OBSERVACIONES', 'obsTrans'], ['CUENTA', 'cuenta'], ['FECHA CAPTURA', 'fechaCap'], ['ID INTERRAPIDISIMO', 'idInter'], ['BODEGA INTERRAPIDISIMO', 'bodInter']];
+const normH = s => String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z ]/g, ' ').replace(/\s+/g, ' ').trim();
+function colsPlantilla(trans) { const n = normH(trans); let c = ['GUIA', 'GUIA REEMPLAZATORIA', 'TIPO NOVEDAD', 'ESTADO TRANSPORTADORA', 'OBSERVACIONES']; if (n === 'ENVIA') c = c.concat(['CUENTA', 'FECHA CAPTURA']); if (n === 'INTERRAPIDISIMO') c = c.concat(['ID INTERRAPIDISIMO', 'BODEGA INTERRAPIDISIMO']); return c; }
+function descargarPlantilla() {
+  const tr = $('iTrans').value; if (!tr) return toast('Primero elige la transportadora', 'warn');
+  const cols = colsPlantilla(tr); const ws = XLSX.utils.aoa_to_sheet([cols]);
+  ws['!cols'] = cols.map(() => ({ wch: 24 }));
+  for (let r = 1; r <= 3000; r++) ['A', 'B'].forEach(c => { ws[c + (r + 1)] = { t: 's', v: '', z: '@' }; });
+  ws['!ref'] = 'A1:' + String.fromCharCode(64 + cols.length) + '3001';
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Novedades');
+  XLSX.writeFile(wb, 'Plantilla_Novedades_' + tr.replace(/\s+/g, '_') + '.xlsx');
+}
+function filasDesdeMatriz(m) {
+  const hi = m.findIndex(r => r.some(c => normH(c) === 'GUIA'));
+  if (hi < 0) throw new Error('No encontré la columna GUIA. Use la plantilla.');
+  const map = {}; m[hi].forEach((h, j) => { const c = ING_COLS.find(x => x[0] === normH(h)); if (c) map[j] = c[1]; });
+  return m.slice(hi + 1).filter(r => r.some(c => String(c).trim())).map(r => { const o = {}; Object.keys(map).forEach(j => { let v = r[j]; if (v instanceof Date) v = v.toLocaleDateString('es-CO'); o[map[j]] = String(v === undefined || v === null ? '' : v).trim(); }); return o; });
+}
+function leerArchivoIngreso(file) {
+  if (!file) return; if (!$('iTrans').value) { toast('Primero elige la transportadora', 'warn'); $('iArchivo').value = ''; return; }
+  $('iArchivoTxt').textContent = 'Leyendo ' + file.name + '…';
+  const rd = new FileReader();
+  rd.onload = e => { try { const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true, raw: false }); const m = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false }); $('iArchivoTxt').textContent = file.name; validarIngresoUI(filasDesdeMatriz(m)); } catch (err) { toast(err.message, 'bad'); $('iArchivoTxt').textContent = 'No se pudo leer el archivo.'; } $('iArchivo').value = ''; };
+  rd.readAsArrayBuffer(file);
+}
+function leerPegado() {
+  if (!$('iTrans').value) return toast('Primero elige la transportadora', 'warn');
+  const t = $('iPegar').value; if (!t.trim()) return toast('Pega las filas primero', 'warn');
+  try { validarIngresoUI(filasDesdeMatriz(t.replace(/\r/g, '').split('\n').map(l => l.split('\t')))); } catch (e) { toast(e.message, 'bad'); }
+}
+['iDrop', 'cDrop'].forEach(id => { const d = $(id); d.addEventListener('dragover', e => { e.preventDefault(); d.classList.add('drag'); }); d.addEventListener('dragleave', () => d.classList.remove('drag')); d.addEventListener('drop', e => { e.preventDefault(); d.classList.remove('drag'); const f = e.dataTransfer.files[0]; if (id === 'iDrop') leerArchivoIngreso(f); else leerCruce(f); }); });
+function validarIngresoUI(filas) {
+  if (!filas.length) return toast('El archivo no tiene filas', 'warn');
+  cargando('iRevision', 'Validando ' + num(filas.length) + ' filas…');
+  gs('validarIngreso', { transportadora: $('iTrans').value, filas }).then(r => {
+    if (!r.ok) { $('iRevision').innerHTML = ''; return toast(r.msg, 'bad'); }
+    S.ingreso = r.filas;
+    const R = r.resumen, st = { lista: ['#ECFDF5', '#065F46', 'Lista'], existe: ['#FFFBEB', '#92400E', 'Ya registrada'], error: ['#FEF2F2', '#991B1B', 'Error'] };
+    $('iRevision').innerHTML = `<div class="grid g-kpi"><div class="card kpi ok"><span class="l">Listas para guardar</span><span class="v">${num(R.lista)}</span></div><div class="card kpi"><span class="l">Ya registradas</span><span class="v" style="color:var(--warn)">${num(R.existe)}</span><span class="s">Marque las que quiera reingresar</span></div><div class="card kpi bad"><span class="l">Con error</span><span class="v">${num(R.error)}</span><span class="s">No se guardan</span></div></div>
+      <div class="card"><div class="card-h"><h3>Revisión antes de guardar</h3><div class="r"><button class="btn" onclick="$('iRevision').innerHTML=''">Cancelar</button><button class="btn btn-p" id="btnGuardarIng" onclick="guardarIngreso()"><i class="fas fa-floppy-disk"></i> Guardar</button></div></div>
+      <div class="tblw" style="max-height:560px;overflow:auto"><table class="tbl"><thead><tr><th>Fila</th><th>Guía</th><th>Reemplazatoria</th><th>Tipo novedad</th><th>Observación</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>${r.filas.map((f, i) => `<tr><td class="muted">${f.n + 1}</td><td class="g">${esc(f.guia)}</td><td>${esc(f.guiaRemp)}</td><td>${esc(f.tipoNov)}</td><td>${esc(f.obsTrans)}</td><td><span class="badge" style="background:${st[f.resultado][0]};color:${st[f.resultado][1]}">${st[f.resultado][2]}</span></td><td class="small">${f.resultado === 'existe' ? `<label style="display:flex;gap:6px;align-items:flex-start"><input type="checkbox" class="chkReing" data-g="${esc(f.guia)}"> <span>Reingresar (la solución no se cumplió)<br><span class="muted">${esc(f.motivo)}</span></span></label>` : esc(f.motivo)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  }).catch(() => $('iRevision').innerHTML = '');
+}
+function guardarIngreso() {
+  const reing = [...document.querySelectorAll('.chkReing:checked')].map(c => c.dataset.g);
+  const b = $('btnGuardarIng'); btnCargando(b, true, 'Guardando…');
+  gs('ingresarNovedades', { transportadora: $('iTrans').value, fechaSolicitud: $('iFecha').value, filas: S.ingreso, reingresar: reing }).then(r => {
+    btnCargando(b, false);
+    if (!r.ok) return toast(r.msg, 'bad');
+    toast(r.msg, 'ok'); $('iRevision').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div><b>${esc(r.msg)}</b> Quedaron en estado Pendiente.</div></div>`; $('iPegar').value = '';
+  }).catch(() => btnCargando(b, false));
+}
+
+// ════════════════════════════════════════════════════════════
+//  CRUCE EXCEL DROPI
+// ════════════════════════════════════════════════════════════
+const DROPI_MAP = { 'NUMERO GUIA': 'guia', 'ESTATUS': 'estatusDropi', 'ID DE BODEGA': 'idBodega', 'PROVEEDOR EMAIL': 'emailProv', 'CATEGORIA PROVEEDOR': 'categoria', 'TELEFONO PROVEEDOR': 'telProv', 'TELEFONO TIENDA PROVEEDOR': 'telTienda', 'MARCA BLANCA': 'marcaBlanca', 'CIUDAD': 'ciudad', 'DEPARTAMENTO': 'depto', 'DIRECCION': 'dirAntigua', 'DIRECCION PROVEEDOR': 'dirAntigua' };
+function leerCruce(file) {
+  if (!file) return; $('cArchivoTxt').textContent = 'Leyendo ' + file.name + '…'; cargando('cTabla', 'Leyendo archivo y cruzando con la hoja…');
+  const rd = new FileReader();
+  rd.onload = e => {
+    let filas;
+    try { const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false }); } catch (err) { $('cTabla').innerHTML = ''; return toast('No se pudo leer el archivo', 'bad'); }
+    $('cArchivo').value = '';
+    gs('getRowsParaCruce').then(r => {
+      if (!r.ok) return toast(r.msg, 'bad');
+      const idx = new Map(); r.rows.forEach(x => { idx.set(normCode(x[0]), x); idx.set(sinCeros(normCode(x[0])), x); });
+      const datos = [], noEnc = [];
+      filas.forEach(row => {
+        const o = {}; Object.keys(row).forEach(k => { const c = DROPI_MAP[normH(k)]; if (c && !o[c]) o[c] = String(row[k] || '').trim(); });
+        if (!o.guia) return;
+        const hit = idx.get(normCode(o.guia)) || idx.get(sinCeros(normCode(o.guia)));
+        if (hit) { o.sheetRow = hit[1]; o.guia = hit[0]; datos.push(o); } else noEnc.push(o);
+      });
+      S.cruce = datos;
+      $('cArchivoTxt').textContent = file.name + ' · ' + num(filas.length) + ' filas';
+      $('cResumen').innerHTML = `<b>Resultado del cruce</b><div class="list-kv" style="margin-top:6px"><div><span>Encontradas para actualizar</span><b style="color:var(--ok)">${num(datos.length)}</b></div><div><span>Del reporte que no están en NOVEDADES</span><b>${num(noEnc.length)}</b></div></div>`;
+      $('cTabla').innerHTML = datos.length ? `<div class="card"><div class="card-h"><h3>Vista previa</h3><div class="r small muted">Se muestran 200 de ${num(datos.length)}</div><div class="r"><button class="btn" onclick="$('cTabla').innerHTML=''">Cancelar</button><button class="btn btn-p" id="btnCruce" onclick="guardarCruce()"><i class="fas fa-floppy-disk"></i> Confirmar y guardar ${num(datos.length)} guías</button></div></div><div class="tblw" style="max-height:520px;overflow:auto"><table class="tbl"><thead><tr><th>Guía</th><th>Estatus Dropi</th><th>ID bodega</th><th>Categoría</th><th>Marca blanca</th><th>Ciudad / Depto</th><th>Teléfono</th></tr></thead><tbody>${datos.slice(0, 200).map(d => `<tr><td class="g">${esc(d.guia)}</td><td>${esc(d.estatusDropi)}</td><td>${esc(d.idBodega)}</td><td>${esc(d.categoria)}</td><td>${esc(d.marcaBlanca)}</td><td>${esc(d.ciudad)} / ${esc(d.depto)}</td><td>${esc(d.telProv)}</td></tr>`).join('')}</tbody></table></div></div>` : `<div class="card">${vacio('Ninguna guía del archivo está registrada en NOVEDADES.')}</div>`;
+    });
+  };
+  rd.readAsArrayBuffer(file);
+}
+async function guardarCruce() {
+  const b = $('btnCruce'); btnCargando(b, true, 'Guardando…'); const lote = 1500; let total = 0;
+  try { for (let i = 0; i < S.cruce.length; i += lote) { const r = await gs('guardarCargaDropi', S.cruce.slice(i, i + lote)); if (!r.ok) throw new Error(r.msg); total += Math.min(lote, S.cruce.length - i); b.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${num(total)} / ${num(S.cruce.length)}`; } toast('Cruce guardado: ' + num(total) + ' guías', 'ok'); $('cTabla').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div>${num(total)} guías actualizadas con los datos de Dropi.</div></div>`; }
+  catch (e) { toast(e.message, 'bad'); btnCargando(b, false); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  BUSCADOR
+// ════════════════════════════════════════════════════════════
+const B_CAMPOS = [['todos', 'Cualquier dato'], ['guia', 'Número de guía'], ['remp', 'Guía reemplazatoria'], ['inter', 'ID Interrapidísimo'], ['bodega', 'ID bodega'], ['email', 'Email proveedor'], ['tel', 'Teléfono proveedor'], ['tienda', 'Teléfono tienda']];
+function initBuscador() { if (!S.bCampo) S.bCampo = 'todos'; $('bCampos').innerHTML = B_CAMPOS.map(c => `<button class="chip ${S.bCampo === c[0] ? 'on' : ''}" onclick="S.bCampo='${c[0]}';initBuscador()">${c[1]}</button>`).join(''); }
+function buscarSol() {
+  const vals = $('bValores').value.split(/[\n,;]+/).map(x => x.trim()).filter(Boolean);
+  if (!vals.length) return toast('Escribe al menos un valor', 'warn');
+  cargando('bRes', 'Buscando soluciones…');
+  gs('buscarSoluciones', { campo: S.bCampo, valores: vals }).then(r => {
+    if (!r.ok) { $('bRes').innerHTML = ''; return toast(r.msg, 'bad'); }
+    S.bRes = r.resultados;
+    $('bRes').innerHTML = `<div class="card"><div class="card-h"><h3>${num(r.resultados.length)} soluciones encontradas</h3><div class="r small muted">Sin transportadora ni número de guía</div></div>${r.resultados.length ? `<div class="tblw"><table class="tbl"><thead><tr><th>Coincide</th><th>Fecha solución</th><th>Dirección nueva</th><th>Ciudad / Depto</th><th>Observación Dropi</th><th>Estado</th><th></th></tr></thead><tbody>${r.resultados.map((x, i) => `<tr><td class="g">${esc(x.coincide)}</td><td>${esc(x.fecha)}</td><td>${esc(x.dirNueva)}</td><td>${esc(x.ciudad)} / ${esc(x.depto)}</td><td>${esc(x.obs)}</td><td>${badge(x.estado)}${x.guias > 1 ? `<div class="small muted" style="margin-top:4px">Aplicada a ${x.guias} guías</div>` : ''}</td><td><button class="btn btn-sm" onclick="copiarSol(${i})"><i class="fas fa-copy"></i> Copiar solución</button></td></tr>`).join('')}</tbody></table></div>` : vacio('No hay soluciones para esos datos. Puede subir la novedad normalmente.', 'fa-magnifying-glass')}${r.sinResultado.length ? `<div style="padding:12px 18px;border-top:1px solid var(--line);font-size:13px;background:#FBFBFC">Sin resultado para: <b>${esc(r.sinResultado.slice(0, 40).join(', '))}${r.sinResultado.length > 40 ? '…' : ''}</b></div>` : ''}</div>`;
+  });
+}
+function copiarSol(i) { const x = S.bRes[i]; const t = `Dirección: ${x.dirNueva}\nCiudad: ${x.ciudad} / ${x.depto}\nObservación: ${x.obs}\nFecha solución: ${x.fecha}`; navigator.clipboard.writeText(t).then(() => toast('Solución copiada', 'ok'), () => toast(t)); }
+
+// ════════════════════════════════════════════════════════════
+//  GESTIÓN Y SOLUCIÓN
+// ════════════════════════════════════════════════════════════
+const BANDEJAS = () => S.u.rol === 'Transportadora' ? [['', 'Todas'], [E.PENDIENTE], [E.GEST_LOG], [E.SOL_NOTIF, 'Por confirmar entrega'], [E.CULM_ENT], [E.BOD_NOTIF], [E.RECH_NOTIF]]
+  : [[E.PENDIENTE], [E.GEST_LOG], [E.COM_SIN], [E.GEST_COM], [E.SOL_LISTA], [E.BOD_LISTA], [E.RECH_LISTA], [E.SOL_NOTIF, 'Notificadas sin confirmar'], [E.BOD_NOTIF], [E.RECH_NOTIF], [E.CULM_ENT], [E.CULM_BOD], ['', 'Todas']];
+function filtrosGestion() { return { texto: $('gTexto').value, transportadora: $('gTrans').value, bodegaStatus: $('gBodega').value, categoriaFiltro: $('gCat').value, captura: $('gCaptura').value, depto: $('gDepto').value, ciudad: $('gCiudad').value, tipoFecha: $('gTipoFecha').value, fechaInicio: $('gIni').value, fechaFin: $('gFin').value, estado: S.gest.bandeja === null ? (S.u.rol === 'Transportadora' ? '' : E.PENDIENTE) : S.gest.bandeja }; }
+function limpiarGestion() { ['gTexto', 'gBodega', 'gCat', 'gCaptura', 'gDepto', 'gCiudad', 'gIni', 'gFin'].forEach(id => $(id).value = ''); if (S.u.rol !== 'Transportadora') $('gTrans').value = ''; cargarGestion(1); }
+function cargarGestion(p) {
+  S.gest.pagina = p || 1; S.gest.sel.clear(); pintarBulk();
+  cargando('gLista', 'Cargando guías…');
+  gs('getGruposBodegaPaginados', filtrosGestion(), S.gest.pagina, +$('gPorPag').value).then(r => {
+    if (!r.ok) { $('gLista').innerHTML = ''; return toast(r.msg, 'bad'); }
+    S.gest.data = r; S.gest.bandeja = r.bandeja;
+    $('gBandejas').innerHTML = BANDEJAS().map(b => { const e = b[0]; const n = e ? r.conteo[e] : Object.values(r.conteo).reduce((a, x) => a + x, 0); return `<button class="chip ${r.bandeja === e ? 'on' : ''}" onclick="S.gest.bandeja='${esc(e)}';cargarGestion(1)">${esc(b[1] || e)} <b>${num(n)}</b></button>`; }).join('');
+    if (!r.gruposArray.length) { $('gLista').innerHTML = `<div class="card">${vacio('No hay guías en esta bandeja con esos filtros.', 'fa-mug-hot')}</div>`; return; }
+    $('gLista').innerHTML = `<div class="small muted" style="margin-bottom:-6px">${num(r.totalGuias)} guías en ${num(r.totalBodegas)} bodegas</div>` + r.gruposArray.map((g, gi) => grupoHTML(g, gi)).join('') + pagerHTML(r, 'cargarGestion');
+  });
+}
+function grupoHTML(g, gi) {
+  const p = g.guias[0]; const sinId = g.bodega.indexOf('Sin ID') === 0;
+  const prev = g.solucionPrevia ? `<div class="alert warn" style="margin:12px 16px 0"><i class="fas fa-clock-rotate-left"></i><div style="flex:1"><b>Esta bodega ya tuvo solución el ${esc(g.solucionPrevia.fecha)}</b><br>Dirección: ${esc(g.solucionPrevia.dirNueva)} · ${esc(g.solucionPrevia.ciudad)} · ${esc(g.solucionPrevia.estado)}${g.solucionPrevia.obs ? '<br>' + esc(g.solucionPrevia.obs) : ''}</div>${staff() ? `<button class="btn btn-sm" onclick="usarSolucionPrevia(${gi})">Usar esta solución</button>` : ''}</div>` : '';
+  const editable = staff() || S.u.rol === 'Transportadora' || S.u.rol === 'Comercial';
+  return `<div class="grp"><div class="grp-h"><div><div class="t">${sinId ? 'Sin ID de bodega' : 'Bodega ' + esc(g.bodega)}</div><div class="s">${esc(p.categoria || 'Sin categoría')} · ${esc(p.ciudad)}${p.depto ? ', ' + esc(p.depto) : ''}${p.emailProv && S.u.rol !== 'Transportadora' ? ' · ' + esc(p.emailProv) : ''}${p.telProv && S.u.rol !== 'Transportadora' ? ' · ' + esc(p.telProv) : ''}</div></div><div class="r"><span class="badge" style="background:#F3F4F6;color:#374151">${g.guias.length} guía${g.guias.length > 1 ? 's' : ''}</span></div></div>${prev}
+  <div class="tblw"><table class="tbl"><thead><tr>${editable ? `<th><input type="checkbox" aria-label="Seleccionar todas" onchange="selGrupo(this,${gi})"></th>` : ''}<th>Guía</th><th>Transportadora</th><th>Tipo novedad</th><th>Fecha</th><th>Estado</th><th>Dirección nueva</th><th></th></tr></thead><tbody>${g.guias.map(x => `<tr>${editable ? `<td><input type="checkbox" class="chkG" data-row="${x.row}" ${S.gest.sel.has(x.row) ? 'checked' : ''} onchange="selFila(this)" aria-label="Seleccionar"></td>` : ''}<td class="g">${esc(x.guia)}${x.intento > 1 ? `<span class="tag">Reingreso #${x.intento}</span>` : ''}${x.guiaRemp ? `<div class="small muted" style="font-weight:500">Reempl.: ${esc(x.guiaRemp)}</div>` : ''}</td><td>${esc(x.trans)}</td><td>${esc(x.tipoNov)}</td><td class="muted">${esc(x.fechaSol)}</td><td>${badge(x.estado)}</td><td class="small">${esc(x.dirNueva)}</td><td><button class="btn btn-sm" onclick="abrirFicha(${x.row})">Ficha</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function pagerHTML(r, fn) { if (!r.totalPaginas || r.totalPaginas <= 1) return ''; return `<div class="card pager"><span>Página ${r.pagina} de ${r.totalPaginas}</span><button class="btn btn-sm" ${r.pagina <= 1 ? 'disabled' : ''} onclick="${fn}(${r.pagina - 1})"><i class="fas fa-chevron-left"></i></button><button class="btn btn-sm" ${r.pagina >= r.totalPaginas ? 'disabled' : ''} onclick="${fn}(${r.pagina + 1})"><i class="fas fa-chevron-right"></i></button></div>`; }
+function selFila(c) { const r = +c.dataset.row; c.checked ? S.gest.sel.add(r) : S.gest.sel.delete(r); pintarBulk(); }
+function selGrupo(c, gi) { S.gest.data.gruposArray[gi].guias.forEach(x => c.checked ? S.gest.sel.add(x.row) : S.gest.sel.delete(x.row)); c.closest('table').querySelectorAll('.chkG').forEach(k => k.checked = c.checked); pintarBulk(); }
+function pintarBulk() {
+  const n = S.gest.sel.size, b = $('gBulk');
+  if (!n) { b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  if (S.u.rol === 'Transportadora') { b.innerHTML = `<b>${n} seleccionada(s)</b><button class="btn btn-ok btn-sm" onclick="confirmarEntregasUI()"><i class="fas fa-check-double"></i> Confirmar: entregadas al proveedor</button><button class="btn btn-sm" style="margin-left:auto" onclick="S.gest.sel.clear();cargarGestion(S.gest.pagina)">Quitar selección</button>`; return; }
+  const ests = [E.GEST_LOG, E.GEST_COM, E.SOL_LISTA, E.BOD_LISTA, E.RECH_LISTA, E.PENDIENTE];
+  b.innerHTML = `<b>${n} seleccionada(s)</b><select class="sel" id="bkEstado" onchange="bulkCampos()">${opciones(ests, 'Cambiar estado a…')}</select><span id="bkExtra" style="display:contents"></span><button class="btn btn-p btn-sm" onclick="aplicarBulk()">Aplicar</button><button class="btn btn-ok btn-sm" onclick="confirmarEntregasUI()"><i class="fas fa-check-double"></i> Confirmar entregadas</button><button class="btn btn-sm" style="margin-left:auto" onclick="pegarListaUI()"><i class="fas fa-paste"></i> Pegar lista de guías</button><button class="btn btn-sm" onclick="S.gest.sel.clear();cargarGestion(S.gest.pagina)">Quitar</button>`;
+}
+function bulkCampos() {
+  const e = $('bkEstado').value; let h = '';
+  if (e === E.BOD_LISTA) h = `<select class="sel" id="bkCiudad">${opciones(S.ini.bodegasDropi.map(b => ({ v: b.ciudad, t: 'Bodega ' + b.ciudad })), 'Bodega destino…')}</select>`;
+  if (e === E.SOL_LISTA) h = `<input class="inp" id="bkDir" placeholder="Dirección nueva (si no la tienen)" style="width:240px">`;
+  if ([E.GEST_COM, E.RECH_LISTA, E.GEST_LOG].indexOf(e) >= 0) h = `<input class="inp" id="bkObs" placeholder="Observación" style="width:220px">`;
+  $('bkExtra').innerHTML = h;
+}
+function aplicarBulk() {
+  const e = $('bkEstado').value; if (!e) return toast('Elige el estado', 'warn');
+  const d = { estado: e }; if ($('bkCiudad')) d.ciudadDestino = $('bkCiudad').value; if ($('bkDir') && $('bkDir').value.trim()) d.dirNueva = $('bkDir').value.trim(); if ($('bkObs') && $('bkObs').value.trim()) d.obsDropi = $('bkObs').value.trim();
+  if (e === E.BOD_LISTA && !d.ciudadDestino) return toast('Elige la bodega destino', 'warn');
+  gs('guardarSolucion', [...S.gest.sel], d).then(r => { toast(r.msg + (r.errores && r.errores.length ? ' ' + r.errores.slice(0, 3).map(x => (x.guia || x.fila) + ': ' + x.motivo).join(' · ') : ''), r.ok ? 'ok' : 'bad'); if (r.ok) cargarGestion(S.gest.pagina); });
+}
+function confirmarEntregasUI() {
+  confirmar('Confirmar entregas', `¿La transportadora confirmó que estas <b>${S.gest.sel.size}</b> guías fueron entregadas al proveedor? Pasarán a "${E.CULM_ENT}". Solo aplica a guías en "Solución notificada".`, 'Sí, culminar').then(ok => { if (!ok) return; gs('confirmarEntregas', [...S.gest.sel]).then(r => { toast(r.msg, r.ok ? 'ok' : 'warn'); cargarGestion(S.gest.pagina); }); });
+}
+function pegarListaUI() {
+  abrirModal(`<div class="drawer-h"><h3>Pegar lista de guías</h3></div><div class="drawer-b"><p class="small muted">Pegue las guías (por ejemplo, las que la transportadora confirmó en su correo). Se mostrarán para que las seleccione todas.</p><textarea class="inp" id="plTxt" rows="10"></textarea></div><div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" onclick="aplicarListaPegada()">Buscar guías</button></div>`);
+}
+function aplicarListaPegada() { $('gTexto').value = $('plTxt').value.split(/[\s,;]+/).filter(Boolean).join(' '); cerrarCapas(); S.gest.bandeja = ''; $('gPorPag').value = '100'; cargarGestion(1); }
+function usarSolucionPrevia(gi) {
+  const g = S.gest.data.gruposArray[gi], sp = g.solucionPrevia;
+  const filas = g.guias.map(x => x.row);
+  confirmar('Usar la solución anterior', `Se aplicará a las <b>${filas.length}</b> guías de la bodega ${esc(g.bodega)}:<br><br><b>Dirección:</b> ${esc(sp.dirNueva)}<br><b>Observación:</b> ${esc(sp.obs || '—')}<br><br>Quedarán en "${E.SOL_LISTA}".`, 'Aplicar').then(ok => { if (!ok) return; gs('guardarSolucion', filas, { estado: E.SOL_LISTA, dirNueva: sp.dirNueva, obsDropi: sp.obs || ('Misma solución del ' + sp.fecha) }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); cargarGestion(S.gest.pagina); }); });
+}
+function exportarGestion() { toast('Generando Excel…'); gs('exportarDatosExcel', filtrosGestion()).then(r => { if (!r.ok) return toast(r.msg, 'bad'); descargarB64(r.fileData, 'Novedades_' + hoyISO() + '.csv'); toast(num(r.total) + ' filas exportadas', 'ok'); }); }
+
+// ── Ficha de guía ──
+function abrirFicha(row) {
+  abrirDrawer(`<div class="drawer-h"><h3>Cargando…</h3></div><div class="drawer-b">${vacio('Cargando ficha…')}</div>`);
+  gs('getFichaGuia', row).then(r => {
+    if (!r.ok) { cerrarCapas(); return toast(r.msg, 'bad'); }
+    const f = r.ficha; S.ficha = r;
+    const edit = staff(); const com = S.u.rol === 'Comercial'; const tr = S.u.rol === 'Transportadora';
+    const campo = (k, l, v, ro) => `<label class="fld">${l}<input class="inp" id="f_${k}" value="${esc(v)}" ${ro || !edit ? 'readonly style="background:#F8F9FB"' : ''}></label>`;
+    const ests = com ? [E.SOL_LISTA, E.COM_SIN] : [E.PENDIENTE, E.GEST_LOG, E.GEST_COM, E.SOL_LISTA, E.BOD_LISTA, E.RECH_LISTA, E.SOL_NOTIF, E.CULM_ENT];
+    const tl = r.eventos.map(e => { const c = { subida: '#9CA3AF', gestion: '#2563EB', notif: '#0891B2', bodega: '#F59E0B', cierre: '#059669' }[e.tipo]; return `<div class="tl" style="color:${c}"><span class="d" style="background:${c}"></span><div><b style="color:var(--ink)">${esc(e.titulo)}</b><span>${esc(e.fecha)}${e.detalle ? ' · ' + esc(e.detalle) : ''}</span></div></div>`; }).join('');
+    abrirDrawer(`<div class="drawer-h"><div style="flex:1;min-width:0"><div class="small muted">${esc(f.trans)} · Bodega ${esc(f.idBodega || 'sin ID')}${f.intento > 1 ? ' · Reingreso #' + f.intento : ''}</div><h3>${esc(f.guia)}</h3><div style="margin-top:6px">${badge(f.estado)} ${f.estadoBodega ? badge(f.estadoBodega) : ''}</div></div><button class="btn btn-ic btn-sm" aria-label="Cerrar" onclick="cerrarCapas()"><i class="fas fa-xmark"></i></button></div>
+    <div class="drawer-b">
+      ${(edit || com) ? `<div class="card p" style="display:flex;flex-direction:column;gap:12px;background:#FCFCFD">
+        <div class="sec-t"><i class="fas fa-pen-to-square" style="color:var(--brand)"></i> Gestión</div>
+        <label class="fld">Estado de la solicitud<select class="sel" id="f_estado" onchange="fichaCampos()">${opciones(ests)}</select></label>
+        <label class="fld hidden" id="f_bodWrap">Bodega Dropi destino<select class="sel" id="f_ciudadDestino" onchange="fichaDirBodega()">${opciones(S.ini.bodegasDropi.map(b => b.ciudad), 'Seleccionar…')}</select></label>
+        <label class="fld">Dirección nueva<input class="inp" id="f_dirNueva" value="${esc(f.dirNueva)}"></label>
+        <label class="fld">Observaciones Dropi<textarea class="inp" id="f_obsDropi" rows="3">${esc(f.obsDropi)}</textarea></label>
+        ${S.ini.isIAConfigured && edit ? `<button class="btn btn-sm" onclick="sugerirIA()"><i class="fas fa-wand-magic-sparkles"></i> Sugerir estado con IA</button>` : ''}
+      </div>` : ''}
+      <div class="sec-t">Novedad reportada</div>
+      <div class="form2">${campo('tipoNov', 'Tipo de novedad', f.tipoNov, true)}${campo('estadoTrans', 'Estado transportadora', f.estadoTrans, true)}${campo('obsTrans', 'Observación transportadora', f.obsTrans, true)}${campo('fechaSol', 'Fecha solicitud', f.fechaSol, true)}${f.cuenta ? campo('cuenta', 'Cuenta (Envía)', f.cuenta, true) : ''}${f.idInter ? campo('idInter', 'ID Interrapidísimo', f.idInter, true) : ''}</div>
+      ${!tr ? `<div class="sec-t">Proveedor</div><div class="form2">${campo('idBodega', 'ID bodega', f.idBodega)}${campo('categoria', 'Categoría', f.categoria)}${campo('emailProv', 'Email', f.emailProv)}${campo('telProv', 'Teléfono', f.telProv)}${campo('telTienda', 'Teléfono tienda', f.telTienda)}${campo('marcaBlanca', 'Marca blanca', f.marca)}${campo('ciudad', 'Ciudad', f.ciudad)}${campo('depto', 'Departamento', f.depto)}${campo('dirAntigua', 'Dirección antigua', f.dirAnt)}${campo('estatusDropi', 'Estatus Dropi', f.estatusDropi)}${campo('idOrden', 'ID orden', f.idOrden)}</div>` : `<div class="form2">${campo('dirNuevaRO', 'Dirección nueva', f.dirNueva, true)}${campo('obsRO', 'Observación Dropi', f.obsDropi, true)}</div>`}
+      <div class="sec-t">Guías reemplazatorias</div>
+      <div class="list-kv">${r.reemplazatorias.length ? r.reemplazatorias.map((x, i) => `<div><span><b>#${i + 1}</b> ${esc(x.guia)}</span><span class="small muted">${esc(x.origen)} ${esc(x.fecha)}</span></div>`).join('') : '<span class="small muted">Sin reemplazatorias registradas.</span>'}</div>
+      ${edit ? `<div style="display:flex;gap:8px"><input class="inp" id="f_nuevaRemp" placeholder="Agregar nueva guía reemplazatoria" style="flex:1"><button class="btn" onclick="agregarRemp(${f.row})">Agregar</button></div>` : ''}
+      <div class="sec-t">Historial</div><div class="timeline">${tl || '<span class="small muted">Sin eventos.</span>'}</div>
+    </div>
+    <div class="drawer-f">${tr && f.estado === E.SOL_NOTIF ? `<button class="btn btn-ok" onclick="S.gest.sel=new Set([${f.row}]);cerrarCapas();confirmarEntregasUI()"><i class="fas fa-check-double"></i> Confirmar entregada</button>` : ''}<button class="btn" onclick="cerrarCapas()">Cerrar</button>${(edit || com) ? `<button class="btn btn-p" id="btnFicha" onclick="guardarFicha(${f.row})"><i class="fas fa-floppy-disk"></i> Guardar</button>` : ''}</div>`);
+    if ($('f_estado')) { $('f_estado').value = ests.indexOf(f.estado) >= 0 ? f.estado : ests[0]; if (f.ciudadDestino) $('f_ciudadDestino').value = (S.ini.bodegasDropi.find(b => b.clave === normH(f.ciudadDestino).replace(/ /g, '')) || {}).ciudad || ''; fichaCampos(); }
+  });
+}
+function fichaCampos() { const e = $('f_estado').value; $('f_bodWrap').classList.toggle('hidden', e !== E.BOD_LISTA); if (e === E.BOD_LISTA) fichaDirBodega(); }
+function fichaDirBodega() { const b = S.ini.bodegasDropi.find(x => x.ciudad === $('f_ciudadDestino').value); if (b) $('f_dirNueva').value = 'Bodega Dropi ' + b.ciudad + (b.direccion ? ' - ' + b.direccion : ''); }
+function guardarFicha(row) {
+  const d = { estado: $('f_estado').value, dirNueva: $('f_dirNueva').value, obsDropi: $('f_obsDropi').value };
+  if (d.estado === E.BOD_LISTA) { d.ciudadDestino = $('f_ciudadDestino').value; if (!d.ciudadDestino) return toast('Elige la Bodega Dropi destino', 'warn'); }
+  if (staff()) ['idBodega', 'categoria', 'emailProv', 'telProv', 'telTienda', 'marcaBlanca', 'ciudad', 'depto', 'dirAntigua', 'estatusDropi', 'idOrden'].forEach(k => { const el = $('f_' + k); if (el) d[k] = el.value; });
+  const b = $('btnFicha'); btnCargando(b, true, 'Guardando…');
+  gs('guardarSolucion', [row], d).then(r => { btnCargando(b, false); if (!r.ok) return toast((r.errores && r.errores[0] ? r.errores[0].motivo : r.msg), 'bad'); toast('Guía actualizada', 'ok'); cerrarCapas(); S.tab === 'comercial' ? cargarComercial(1) : cargarGestion(S.gest.pagina); });
+}
+function agregarRemp(row) { const v = $('f_nuevaRemp').value.trim(); if (!v) return; gs('agregarReemplazatoria', row, v).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) abrirFicha(row); }); }
+function sugerirIA() { const t = $('f_obsDropi').value || (S.ficha && S.ficha.ficha.obsTrans); if (!t) return toast('Escribe una observación primero', 'warn'); toast('Analizando con IA…'); gs('procesarTextoConIA', 'ANALIZAR_GESTION', t, '').then(r => { if (!r.ok) return toast(r.msg, 'bad'); const est = r.data.estadoSugerido; if ([...$('f_estado').options].some(o => o.value === est)) $('f_estado').value = est; if (r.data.observacionLimpia) $('f_obsDropi').value = r.data.observacionLimpia; fichaCampos(); toast('Sugerencia aplicada. Revísala antes de guardar.', 'ok'); }); }
+
+// ════════════════════════════════════════════════════════════
+//  COMERCIAL
+// ════════════════════════════════════════════════════════════
+function cargarComercial(p) {
+  cargando('kLista', 'Cargando bandeja comercial…');
+  gs('getGruposBodegaPaginados', { modo: 'comercial', texto: $('kTexto').value, categoriaFiltro: $('kCat').value }, p || 1, 30).then(r => {
+    if (!r.ok) { $('kLista').innerHTML = ''; return toast(r.msg, 'bad'); }
+    S.gest.data = r;
+    $('kKpis').innerHTML = `<div class="card kpi hl"><span class="l">Por gestionar</span><span class="v">${num(r.totalGuias)}</span><span class="s">${num(r.totalBodegas)} proveedores</span></div><div class="card kpi"><span class="l">Tus categorías</span><span class="v" style="font-size:16px;margin-top:6px">${esc((S.u.categorias || []).join(', '))}</span></div>`;
+    $('kLista').innerHTML = r.gruposArray.length ? r.gruposArray.map((g, gi) => { const p0 = g.guias[0]; return `<div class="grp"><div class="grp-h"><div><div class="t">Bodega ${esc(g.bodega)}</div><div class="s">${esc(p0.categoria)} · ${esc(p0.ciudad)} · Tel. ${esc(p0.telProv || '—')} · Tienda ${esc(p0.telTienda || '—')}</div></div><div class="r">${p0.telProv ? `<a class="btn btn-sm" target="_blank" href="https://wa.me/${waNum(p0.telProv)}"><i class="fab fa-whatsapp" style="color:#16A34A"></i> WhatsApp</a>` : ''}<button class="btn btn-p btn-sm" onclick="gestionComercial(${gi})">Gestionar proveedor</button></div></div><div class="tblw"><table class="tbl"><thead><tr><th>Guía</th><th>Transportadora</th><th>Tipo novedad</th><th>Nota de Gestión</th><th></th></tr></thead><tbody>${g.guias.map(x => `<tr><td class="g">${esc(x.guia)}</td><td>${esc(x.trans)}</td><td>${esc(x.tipoNov)}</td><td class="small">${esc(x.obsDropi)}</td><td><button class="btn btn-sm" onclick="abrirFicha(${x.row})">Ficha</button></td></tr>`).join('')}</tbody></table></div></div>`; }).join('') + pagerHTML(r, 'cargarComercial') : `<div class="card">${vacio('No tienes guías por gestionar. ¡Todo al día!', 'fa-mug-hot')}</div>`;
+  });
+}
+function waNum(t) { const n = String(t || '').replace(/\D/g, ''); return n.startsWith('57') ? n : '57' + n; }
+function gestionComercial(gi) {
+  const g = S.gest.data.gruposArray[gi]; const filas = g.guias.map(x => x.row);
+  abrirDrawer(`<div class="drawer-h"><div style="flex:1"><div class="small muted">${esc(g.guias[0].categoria)} · ${g.guias.length} guías</div><h3>Bodega ${esc(g.bodega)}</h3></div><button class="btn btn-ic btn-sm" aria-label="Cerrar" onclick="cerrarCapas()"><i class="fas fa-xmark"></i></button></div>
+  <div class="drawer-b"><div class="card p small" style="background:#F8F9FB;display:flex;flex-direction:column;gap:4px"><span><b>Teléfono:</b> ${esc(g.guias[0].telProv || '—')}</span><span><b>Tienda:</b> ${esc(g.guias[0].telTienda || '—')}</span><span><b>Nota de Gestión:</b> ${esc(g.guias[0].obsDropi || '—')}</span></div>
+  <div class="sec-t">Resultado del contacto</div>
+  <div style="display:flex;flex-direction:column;gap:8px"><label class="radio-card on" id="rcSi" onclick="rcSel(true)"><input type="radio" name="rc" checked><span><b>Se logró contacto: hay solución</b>Pasa a "${E.SOL_LISTA}"</span></label><label class="radio-card" id="rcNo" onclick="rcSel(false)"><input type="radio" name="rc"><span><b>No se logró contacto</b>Vuelve a Gestión como "${E.COM_SIN}" para enviarla a Bodega Dropi</span></label></div>
+  <label class="fld" id="kDirWrap">Dirección nueva<input class="inp" id="kDir" placeholder="Dirección que confirma el proveedor"></label>
+  <label class="fld">Observación<textarea class="inp" id="kObs" rows="3"></textarea></label></div>
+  <div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" id="btnCom" onclick="guardarComercial([${filas.join(',')}])">Guardar</button></div>`);
+  S.kSi = true;
+}
+function rcSel(si) { S.kSi = si; $('rcSi').classList.toggle('on', si); $('rcNo').classList.toggle('on', !si); $('kDirWrap').classList.toggle('hidden', !si); }
+function guardarComercial(filas) {
+  const d = S.kSi ? { estado: E.SOL_LISTA, dirNueva: $('kDir').value.trim(), obsDropi: $('kObs').value.trim() } : { estado: E.COM_SIN, obsDropi: $('kObs').value.trim() };
+  if (S.kSi && !d.dirNueva) return toast('Escribe la dirección nueva', 'warn'); if (!S.kSi && !d.obsDropi) return toast('Cuenta por qué no hubo contacto', 'warn');
+  const b = $('btnCom'); btnCargando(b, true);
+  gs('guardarSolucion', filas, d).then(r => { btnCargando(b, false); toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { cerrarCapas(); cargarComercial(1); } });
+}
+
+// ════════════════════════════════════════════════════════════
+//  WHATSAPP
+// ════════════════════════════════════════════════════════════
+function cargarWsp() {
+  cargando('wCola', 'Armando mensajes…');
+  gs('getGruposWsp', { busqueda: $('wBod').value, estado: $('wEstado').value, transportadora: $('wTrans').value, categoria: $('wCat').value }).then(r => {
+    if (!r.ok) return toast(r.msg, 'bad');
+    S.wsp.data = r; pintarContadorWsp(r.enviadosHoy, r.limite);
+    $('wTotal').textContent = num(r.wspArray.length) + ' proveedores';
+    $('wCola').innerHTML = r.wspArray.length ? `<table class="tbl"><thead><tr><th>ID bodega</th><th>Teléfono</th><th>Guías</th><th>Estados</th><th></th></tr></thead><tbody>${r.wspArray.map((x, i) => `<tr id="wRow${i}" style="${x.enviado ? 'opacity:.55' : ''}"><td class="g">${esc(x.bodega)}<div class="small muted" style="font-weight:500">${esc(x.categoria)}</div></td><td>${esc(x.tel || 'Sin teléfono')}</td><td>${x.guias}${x.pendientes ? ` <span class="small muted">(${x.pendientes} pend.)</span>` : ''}</td><td>${x.estados.map(badge).join(' ')}</td><td><button class="btn btn-sm" onclick="verWsp(${i})">Ver</button></td></tr>`).join('')}</tbody></table>` : vacio('No hay proveedores con guías activas.', 'fa-mug-hot');
+    if (r.wspArray.length) verWsp(0);
+  });
+}
+function pintarContadorWsp(n, lim) { const p = Math.min(100, Math.round(n / Math.max(1, lim) * 100)); $('wContador').innerHTML = `<i class="fas fa-shield-heart"></i><div style="flex:1"><b>Enviados hoy por ti: ${num(n)} de ${num(lim)} sugeridos.</b> Para cuidar tu número, el sistema avisa al acercarte al límite. ${S.wsp.data && S.wsp.data.crm ? 'El CRM está conectado.' : 'Cuando se conecte el CRM, los mensajes saldrán por la API oficial.'}</div><div class="progress"><i style="width:${p}%"></i></div>`; }
+function verWsp(i) {
+  const x = S.wsp.data.wspArray[i]; S.wsp.actual = i; const pl = S.wsp.plantilla || 'confirmar';
+  $('wPrev').innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:15px">Bodega ${esc(x.bodega)}</b><select class="sel" style="height:34px" onchange="S.wsp.plantilla=this.value;verWsp(${i})"><option value="confirmar" ${pl === 'confirmar' ? 'selected' : ''}>Confirmar dirección</option><option value="ultimo" ${pl === 'ultimo' ? 'selected' : ''}>Último aviso antes de bodega</option></select></div><div class="small muted">${esc(x.ciudad)} · ${x.trans.map(esc).join(', ')}</div><div class="wa-prev" id="wMsg" contenteditable="true">${esc(pl === 'ultimo' ? x.msgUltimo : x.msg)}</div>
+  <button class="btn btn-ok" ${x.tel ? '' : 'disabled'} onclick="enviarWsp(${i})"><i class="fab fa-whatsapp"></i> Abrir en WhatsApp y marcar enviado</button>${S.wsp.data.crm ? `<button class="btn btn-dark" onclick="enviarCRM(${i})"><i class="fas fa-robot"></i> Enviar por CRM</button>` : ''}<button class="btn" onclick="verWsp(${Math.min(i + 1, S.wsp.data.wspArray.length - 1)})">Saltar al siguiente</button>${!x.tel ? '<span class="small" style="color:var(--bad)">Este proveedor no tiene teléfono registrado.</span>' : ''}`;
+}
+function enviarWsp(i) {
+  const x = S.wsp.data.wspArray[i]; const msg = $('wMsg').innerText;
+  window.open('https://wa.me/' + waNum(x.tel) + '?text=' + encodeURIComponent(msg), '_blank');
+  gs('registrarEnvioWsp', x.bodega).then(r => { if (!r.ok) return; x.enviado = true; const row = $('wRow' + i); if (row) row.style.opacity = .55; pintarContadorWsp(r.enviadosHoy, r.limite); if (r.aviso) toast(r.aviso, 'warn'); else toast('Marcado como enviado' + (r.movidas ? ` · ${r.movidas} guías pasaron a gestión` : ''), 'ok'); if (i + 1 < S.wsp.data.wspArray.length) verWsp(i + 1); });
+}
+function enviarCRM(i) { const x = S.wsp.data.wspArray[i]; gs('enviarWspCRM', { idBodega: x.bodega, telefono: waNum(x.tel), mensaje: $('wMsg').innerText }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok && i + 1 < S.wsp.data.wspArray.length) verWsp(i + 1); }); }
+
+// ════════════════════════════════════════════════════════════
+//  CORREOS
+// ════════════════════════════════════════════════════════════
+const M_TIPOS = [['solucion', 'Soluciones', 'Guías en "Solución lista - por notificar"'], ['bodega', 'Envío a Bodega Dropi', 'Guías en "Para Bodega Dropi - por notificar"'], ['rechazada', 'Rechazadas', 'Guías en "Rechazada - por notificar"']];
+function initCorreos() { if (!S.mTipo) S.mTipo = 'solucion'; $('mTipos').innerHTML = M_TIPOS.map(t => `<label class="radio-card ${S.mTipo === t[0] ? 'on' : ''}" onclick="S.mTipo='${t[0]}';initCorreos()"><input type="radio" name="mt" ${S.mTipo === t[0] ? 'checked' : ''}><span><b>${t[1]}</b><span class="muted">${t[2]}</span></span></label>`).join(''); $('mBodWrap').classList.toggle('hidden', S.mTipo !== 'bodega'); }
+function payloadCorreo() { return { tipoEnvio: S.mTipo, transportadora: $('mTrans').value, ciudadBodega: $('mBod').value, fechaInicio: $('mIni').value, fechaFin: $('mFin').value, depto: $('mDepto').value, ciudad: $('mCiudad').value, para: $('mPara').value.trim(), cc: $('mCC').value.trim() }; }
+function previaCorreo() {
+  const p = payloadCorreo(); if (!p.transportadora) return toast('Elige la transportadora', 'warn'); if (p.tipoEnvio === 'bodega' && !p.ciudadBodega) return toast('Elige la Bodega Dropi destino', 'warn');
+  cargando('mPrevia', 'Armando vista previa…');
+  gs('previsualizarCorreo', p).then(r => { if (!r.ok) { $('mPrevia').innerHTML = ''; return toast(r.msg, 'bad'); } if (!r.total) { $('mPrevia').innerHTML = `<div class="card">${vacio('No hay guías para este envío con esos filtros.')}</div>`; return; } $('mPrevia').innerHTML = `<div class="card"><div class="card-h"><h3>${num(r.total)} guías · ${esc(r.asunto)}</h3></div><div style="padding:14px"><iframe class="prev" sandbox="" id="mFrame"></iframe></div></div>`; $('mFrame').srcdoc = r.html; });
+}
+function enviarCorreo() {
+  const p = payloadCorreo(); if (!p.transportadora || !p.para) return toast('Transportadora y correo de destino son obligatorios', 'warn'); if (p.tipoEnvio === 'bodega' && !p.ciudadBodega) return toast('Elige la Bodega Dropi destino', 'warn');
+  confirmar('Enviar correo', `Se enviará a <b>${esc(p.para)}</b> y las guías quedarán notificadas. ¿Continuar?`, 'Enviar').then(ok => { if (!ok) return; toast('Enviando…'); gs('enviarCorreoTransportadora', p).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) $('mPrevia').innerHTML = `<div class="alert ok"><i class="fas fa-paper-plane"></i><div>${esc(r.msg)}</div></div>`; }); });
+}
+
+// ════════════════════════════════════════════════════════════
+//  BODEGA DROPI · escáner instantáneo
+// ════════════════════════════════════════════════════════════
+const Sonido = { ctx: null, c() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); return this.ctx; },
+  tono(f, t, dur, vol, del) { try { const c = this.c(), n = c.currentTime + (del || 0), o = c.createOscillator(), g = c.createGain(); o.type = t; o.frequency.setValueAtTime(f, n); g.gain.setValueAtTime(vol, n); g.gain.exponentialRampToValueAtTime(.001, n + dur); o.connect(g); g.connect(c.destination); o.start(n); o.stop(n + dur); } catch (e) {} },
+  ok() { this.tono(880, 'sine', .14, .3); this.tono(1320, 'triangle', .25, .3, .08); if (navigator.vibrate) navigator.vibrate(80); },
+  mal() { this.tono(160, 'sawtooth', .35, .4); this.tono(120, 'sawtooth', .35, .4, .18); if (navigator.vibrate) navigator.vibrate([160, 70, 200]); },
+  aviso() { this.tono(520, 'square', .18, .2); } };
+function cargarBodega(p) {
+  S.bod.pagina = p || 1; S.bod.sel.clear();
+  if (!$('oTabla').innerHTML) cargando('oTabla');
+  gs('getBodegasDropiData', { ciudadDestino: $('oCiudad').value, transportadora: $('oTrans').value, guia: $('oGuia').value, estadoRecep: $('oEstado').value, fechaIni: $('oIni').value, fechaFin: $('oFin').value, idBodega: $('oIdBod').value, pagina: S.bod.pagina, porPagina: 100 }).then(r => {
+    if (!r.ok) return toast(r.msg, 'bad');
+    S.bod.data = r; S.bod.contacto = r.contacto;
+    S.bod.indice = new Map(); r.indice.forEach(it => it.c.forEach(c => { S.bod.indice.set(c, it); S.bod.indice.set(sinCeros(c), it); }));
+    $('oKpis').innerHTML = `<div class="card kpi hl"><span class="l">En tránsito a ${esc(r.ciudad === 'TODAS' ? 'las bodegas' : r.ciudad)}</span><span class="v">${num(r.stats.transito)}</span><span class="s">Esperan escaneo</span></div><div class="card kpi ok"><span class="l">Recibidas hoy</span><span class="v">${num(r.stats.recibidasHoy)}</span></div><div class="card kpi"><span class="l">En bodega</span><span class="v">${num(r.stats.recibidas)}</span><span class="s">Generan cobro mensual</span></div><div class="card kpi"><span class="l">Retiradas / reenviadas</span><span class="v">${num(r.stats.cerradas)}</span></div>`;
+    pintarTablaBodega();
+  });
+}
+function pintarTablaBodega() {
+  const r = S.bod.data; const puedeCerrar = staff() || S.u.rol === 'Bodega Dropi';
+  $('oTabla').innerHTML = `<div class="card-h"><h3>Guías de la bodega</h3><div class="r small muted">${num(r.totalFilas)} guías</div><div class="r" id="oAcc"></div></div>${r.rows.length ? `<div class="tblw" style="max-height:620px;overflow:auto"><table class="tbl"><thead><tr><th><input type="checkbox" aria-label="Seleccionar todas" onchange="selTodasBod(this)"></th><th>Guía inicial</th><th>Reemplazatorias</th><th>Transportadora</th><th>Bodega Dropi</th><th>Estado</th><th>Notificada</th><th>Recibida</th></tr></thead><tbody>${r.rows.map(x => `<tr><td><input type="checkbox" class="chkB" data-row="${x.row}" data-e="${esc(x.estadoBodega)}" onchange="selBod(this)" aria-label="Seleccionar"></td><td class="g">${esc(x.guia)}</td><td class="small">${x.remps.map(esc).join(' → ') || '—'}</td><td>${esc(x.trans)}</td><td>${esc(x.ciudadDestino)}</td><td>${badge(x.estadoBodega)}</td><td class="muted">${esc(x.fechaNotif)}</td><td class="muted">${esc(x.fechaRecep)}</td></tr>`).join('')}</tbody></table></div>${pagerHTML(r, 'cargarBodega')}` : vacio('No hay guías con esos filtros.')}`;
+  S.bod.puedeCerrar = puedeCerrar;
+}
+function selBod(c) { const r = +c.dataset.row; c.checked ? S.bod.sel.add(r) : S.bod.sel.delete(r); accionesBod(); }
+function selTodasBod(c) { document.querySelectorAll('.chkB').forEach(k => { k.checked = c.checked; c.checked ? S.bod.sel.add(+k.dataset.row) : S.bod.sel.delete(+k.dataset.row); }); accionesBod(); }
+function accionesBod() {
+  const n = S.bod.sel.size; if (!n) { $('oAcc').innerHTML = ''; return; }
+  $('oAcc').innerHTML = `<button class="btn btn-p btn-sm" onclick="recibirSel()"><i class="fas fa-box-open"></i> Marcar ${n} como recibidas</button>` + (S.bod.puedeCerrar ? `<button class="btn btn-sm" onclick="cerrarBod('${EB.RETIRADO}')">Retirado por el proveedor</button><button class="btn btn-sm" onclick="cerrarBod('${EB.REENVIADO}')">Reenviado al proveedor</button>` : '');
+}
+function recibirSel() { gs('recibirGuiasBodega', [...S.bod.sel], '').then(r => { toast(r.msg + (r.errores.length ? ' ' + r.errores.slice(0, 2).map(x => (x.guia || '') + ': ' + x.motivo).join(' · ') : ''), r.ok ? 'ok' : 'warn'); cargarBodega(S.bod.pagina); }); }
+function cerrarBod(est) { confirmar(est, `¿Marcar ${S.bod.sel.size} guía(s) como "${esc(est)}"? Se detiene el cobro de indemnización.`, 'Confirmar').then(ok => { if (!ok) return; gs('actualizarEstadoBodega', [...S.bod.sel], { estado: est }).then(r => { toast(r.msg, r.ok ? 'ok' : 'warn'); cargarBodega(S.bod.pagina); }); }); }
+function exportarBodega() { gs('exportarBodegasDropiCSV', { ciudadDestino: $('oCiudad').value, transportadora: $('oTrans').value, estadoRecep: $('oEstado').value }).then(r => { if (r.ok) descargarB64(r.fileData, 'Bodega_Dropi_' + hoyISO() + '.csv'); }); }
+function buscarEnIndice(cod) {
+  const c = normCode(cod); if (!c) return null;
+  let it = S.bod.indice.get(c) || S.bod.indice.get(sinCeros(c)); if (it) return it;
+  if (c.length >= 10) { for (const [k, v] of S.bod.indice) if (k.length >= 10 && (c.indexOf(k) >= 0 || k.indexOf(c) >= 0)) return v; }
+  return null;
+}
+function resultado(tipo, kicker, codigo, detalle) { $('oResultado').innerHTML = `<div class="res ${tipo}"><span class="k">${esc(kicker)}</span><span class="c">${esc(codigo)}</span><span>${detalle}</span></div>`; }
+function alFeed(tipo, codigo, txt) { const ic = { ok: ['fa-circle-check', '#047857'], bad: ['fa-ban', '#B91C1C'], warn: ['fa-circle-exclamation', '#B45309'], info: ['fa-circle-notch fa-spin', '#64748B'] }[tipo]; S.bod.feed.unshift({ tipo, codigo, txt, ic }); S.bod.feed = S.bod.feed.slice(0, 60); $('oFeed').innerHTML = S.bod.feed.map(f => `<div><i class="fas ${f.ic[0]}" style="color:${f.ic[1]}"></i><b>${esc(f.codigo)}</b><span class="muted">${esc(f.txt)}</span></div>`).join(''); $('oCont').textContent = '· ' + S.bod.feed.filter(f => f.tipo === 'ok').length + ' recibidas'; }
+let colaTimer = null;
+function procesarCodigo(raw) {
+  const cod = String(raw || '').trim(); if (!cod) return;
+  const it = buscarEnIndice(cod);
+  if (it && it.e === 'T') {
+    it.e = 'R'; Sonido.ok(); resultado('ok', 'RECIBIDA EN BODEGA', cod, `Guía ${esc(it.g)} · ${esc(it.ciu)} · Guardando…`); alFeed('ok', cod, 'Recibida');
+    S.bod.cola.push({ row: it.row, cod }); clearTimeout(colaTimer); colaTimer = setTimeout(vaciarCola, 700);
+  } else if (it && it.e === 'R') {
+    Sonido.aviso(); resultado('warn', 'YA ESTABA RECIBIDA', cod, `Guía ${esc(it.g)}${it.f ? ' · recibida el ' + esc(it.f) : ''}. No hay que hacer nada.`); alFeed('warn', cod, 'Ya estaba recibida');
+  } else {
+    resultado('info', 'VERIFICANDO…', cod, 'Revisando en toda la base de datos.'); alFeed('info', cod, 'Verificando');
+    gs('registrarRechazoBodega', [cod]).then(r => {
+      const x = r.resultados[0]; S.bod.feed.shift();
+      if (x.tipo === 'recibida') { Sonido.ok(); resultado('ok', 'RECIBIDA EN BODEGA', cod, 'Guía ' + esc(x.guia)); alFeed('ok', cod, 'Recibida'); cargarBodegaSilencioso(); }
+      else if (x.tipo === 'ya') { Sonido.aviso(); resultado('warn', 'YA ESTABA RECIBIDA', cod, esc(x.motivo)); alFeed('warn', cod, x.motivo); }
+      else { Sonido.mal(); resultado('bad', 'NO RECIBIR', cod, `${esc(x.motivo)}.<br><b>Comuníquese urgente con ${esc(r.contacto)} antes de recibirla.</b> Puede ser una guía reemplazatoria nueva.<br><span class="small">Quedó registrada en "Guías rechazadas en bodega".</span>`); alFeed('bad', cod, 'NO RECIBIR · ' + x.motivo); }
+    }).catch(() => { S.bod.feed.shift(); resultado('bad', 'SIN CONEXIÓN', cod, 'No se pudo verificar. Intente de nuevo.'); });
+  }
+}
+function vaciarCola() {
+  if (!S.bod.cola.length) return; const lote = S.bod.cola.splice(0);
+  gs('recibirGuiasBodega', lote.map(x => x.row), '').then(r => {
+    (r.errores || []).filter(e => !e.yaRecibida).forEach(e => { const l = lote.find(x => x.row === e.fila); Sonido.mal(); resultado('bad', 'NO SE PUDO RECIBIR', l ? l.cod : (e.guia || ''), esc(e.motivo)); alFeed('bad', l ? l.cod : '', e.motivo); });
+    if (r.ok) { const ultimo = lote[lote.length - 1]; if ($('oResultado').innerText.indexOf('Guardando') >= 0) resultado('ok', 'RECIBIDA EN BODEGA', ultimo.cod, 'Guardada en el sistema.'); cargarBodegaSilencioso(); }
+  }).catch(() => { lote.forEach(x => S.bod.cola.push(x)); toast('Sin conexión: se reintentará', 'warn'); clearTimeout(colaTimer); colaTimer = setTimeout(vaciarCola, 4000); });
+}
+let silTimer = null; function cargarBodegaSilencioso() { clearTimeout(silTimer); silTimer = setTimeout(() => cargarBodega(S.bod.pagina), 1500); }
+$('oScan').addEventListener('keydown', e => { if (e.key === 'Enter' || (e.key === 'Tab' && e.target.value.trim())) { e.preventDefault(); const v = e.target.value; e.target.value = ''; procesarCodigo(v); } });
+document.addEventListener('click', e => { if (S.tab === 'bodega' && !e.target.closest('input,textarea,select,button,a,label,.drawer,.modal')) $('oScan').focus(); });
+function revisarMasiva() {
+  const cods = $('oMasiva').value.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean); if (!cods.length) return;
+  const ok = [], ya = [], no = [];
+  cods.forEach(c => { const it = buscarEnIndice(c); if (it && it.e === 'T') ok.push({ c, it }); else if (it) ya.push(c); else no.push(c); });
+  S.bod.masiva = { ok, no };
+  $('oMasivaRes').innerHTML = `<div class="list-kv"><div><span style="color:var(--ok);font-weight:700">En tránsito, listas para recibir</span><b>${ok.length}</b></div><div><span>Ya recibidas</span><b>${ya.length}</b></div><div><span style="color:var(--bad);font-weight:700">No están en la lista de esta bodega</span><b>${no.length}</b></div></div>${ok.length || no.length ? `<button class="btn btn-p" style="margin-top:10px;width:100%" onclick="recibirMasiva()">Recibir ${ok.length} y verificar ${no.length}</button>` : ''}${no.length ? `<div class="small" style="margin-top:8px;color:var(--bad)">Verificar: ${no.map(esc).join(', ')}</div>` : ''}`;
+}
+function recibirMasiva() {
+  const m = S.bod.masiva; const ps = [];
+  if (m.ok.length) ps.push(gs('recibirGuiasBodega', m.ok.map(x => x.it.row), 'Búsqueda masiva'));
+  if (m.no.length) ps.push(gs('registrarRechazoBodega', m.no));
+  Promise.all(ps).then(rs => {
+    let rec = m.ok.length ? (rs[0].recibidas || []).length : 0; const rr = rs[m.ok.length ? 1 : 0];
+    let html = ''; if (m.no.length && rr) { rec += rr.resultados.filter(x => x.tipo === 'recibida').length; const bad = rr.resultados.filter(x => x.tipo === 'rechazo'); if (bad.length) { Sonido.mal(); html = `<div class="alert bad" style="margin-top:10px"><i class="fas fa-ban"></i><div><b>NO RECIBIR ${bad.length}:</b> ${bad.map(x => esc(x.codigo) + ' (' + esc(x.motivo) + ')').join(' · ')}<br>Comuníquese con ${esc(rr.contacto)}.</div></div>`; } }
+    if (rec) Sonido.ok();
+    $('oMasivaRes').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div>${rec} guía(s) recibida(s).</div></div>` + html; $('oMasiva').value = ''; cargarBodega(S.bod.pagina);
+  });
+}
+// Cámara y foto (librerías bajo demanda para no hacer lenta la app)
+function cargarScript(src) { return new Promise((ok, mal) => { if (document.querySelector(`script[src="${src}"]`)) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = mal; document.head.appendChild(s); }); }
+let cam = null;
+async function abrirCamara() {
+  $('camWrap').classList.remove('hidden'); $('camTxt').textContent = 'Iniciando cámara…';
+  try {
+    await cargarScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js');
+    cam = new Html5Qrcode('camBox'); let pausa = false;
+    await cam.start({ facingMode: 'environment' }, { fps: 12, qrbox: { width: 280, height: 140 } }, txt => { if (pausa) return; pausa = true; setTimeout(() => pausa = false, 1500); procesarCodigo(txt); }, () => {});
+    $('camTxt').textContent = 'Cámara activa: apunte al código de barras.';
+  } catch (e) { $('camTxt').textContent = 'El navegador no permitió la cámara aquí. Use el botón "Foto" o la pistola.'; }
+}
+function cerrarCamara() { if (cam) { cam.stop().catch(() => {}); cam = null; } $('camWrap').classList.add('hidden'); $('oScan').focus(); }
+async function leerFoto(inp) {
+  const file = inp.files && inp.files[0]; if (!file) return; inp.value = '';
+  resultado('info', 'LEYENDO FOTO…', '…', 'Buscando el código de barras y el número de guía.');
+  try { await cargarScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'); const t = new Html5Qrcode('fotoTmp'); const txt = await t.scanFile(file, false); try { t.clear(); } catch (e) {} if (txt) return procesarCodigo(txt); } catch (e) {}
+  try {
+    await cargarScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    const r = await Tesseract.recognize(file, 'eng', { tessedit_char_whitelist: '0123456789' });
+    const nums = ((r.data && r.data.text) || '').match(/\d{8,16}/g) || [];
+    const hit = nums.find(n => buscarEnIndice(n)); if (hit || nums[0]) return procesarCodigo(hit || nums[0]);
+  } catch (e) {}
+  Sonido.mal(); resultado('bad', 'NO SE PUDO LEER', '—', 'Acerque más la foto o escriba el número.');
+}
+
+// ════════════════════════════════════════════════════════════
+//  RECHAZOS
+// ════════════════════════════════════════════════════════════
+function cargarRechazos() {
+  $('rFiltro').innerHTML = ['Por resolver', 'Vinculada', 'No recibir', ''].map(e => `<button class="chip ${S.rech.estado === e ? 'on' : ''}" onclick="S.rech.estado='${e}';cargarRechazos()">${e || 'Todos'}</button>`).join('');
+  cargando('rTabla');
+  gs('getRechazosBodega', { estado: S.rech.estado }).then(r => {
+    if (!r.ok) return toast(r.msg, 'bad'); S.rech.rows = r.rows;
+    const c = $('cntRech'); if (c) { c.textContent = r.porResolver; c.classList.toggle('hidden', !r.porResolver); }
+    $('rTabla').innerHTML = `<div class="card-h"><h3>${S.rech.estado || 'Todos'} · ${num(r.rows.length)}</h3></div>` + (r.rows.length ? `<div class="tblw"><table class="tbl"><thead><tr><th>Guía leída</th><th>Bodega</th><th>Fecha y hora</th><th>Motivo</th><th>Estado</th><th></th></tr></thead><tbody>${r.rows.map((x, i) => `<tr><td class="g">${esc(x.guia)}</td><td>${esc(x.ciudad)}</td><td class="muted">${esc(x.fecha)}</td><td class="small">${esc(x.motivo)}</td><td>${badge(x.estado)}</td><td>${x.estado === 'Por resolver' ? `<button class="btn btn-sm" onclick="verRechazo(${i})">Resolver</button>` : `<span class="small muted">${esc(x.resueltoPor)}</span>`}</td></tr>`).join('')}</tbody></table></div>` : vacio('No hay rechazos aquí.', 'fa-mug-hot'));
+  });
+}
+function verRechazo(i) {
+  const x = S.rech.rows[i]; S.rech.actual = x; S.rech.fila = null;
+  $('rPanel').innerHTML = `<div class="small muted">Bodega ${esc(x.ciudad)} · ${esc(x.fecha)} · ${esc(x.usuario)}</div><b style="font-size:20px;font-family:'Plus Jakarta Sans'">${esc(x.guia)}</b><div class="alert bad"><i class="fas fa-ban"></i><div>${esc(x.motivo)}</div></div>
+  <div class="sec-t">¿Es una reemplazatoria nueva de una guía nuestra?</div><div style="display:flex;gap:8px"><input class="inp" id="rBuscar" placeholder="Guía inicial o reemplazatoria anterior" style="flex:1" onkeydown="if(event.key==='Enter')buscarInicial()"><button class="btn" onclick="buscarInicial()">Buscar</button></div><div id="rRes"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p" id="rVinc" disabled onclick="resolver('vincular')"><i class="fas fa-link"></i> Vincular y avisar a la bodega</button><button class="btn btn-bad" onclick="resolver('no_recibir')">No es nuestra: no recibir</button></div>`;
+}
+function buscarInicial() { const v = $('rBuscar').value.trim(); if (!v) return; $('rRes').innerHTML = '<span class="small muted">Buscando…</span>'; gs('buscarGuiaInicial', v).then(r => { if (!r.ok) return toast(r.msg, 'bad'); $('rRes').innerHTML = r.resultados.length ? r.resultados.map(g => `<label class="radio-card" style="margin-top:6px" onclick="S.rech.fila=${g.row};document.querySelectorAll('#rRes .radio-card').forEach(c=>c.classList.remove('on'));this.classList.add('on');$('rVinc').disabled=false"><input type="radio" name="rr"><span><b>${esc(g.guia)} · ${esc(g.trans)}</b>${esc(g.estado)}${g.ciudadDestino ? ' · ' + esc(g.ciudadDestino) : ''}<br><span class="muted">Reemplazatorias: ${g.remps.map(esc).join(' → ') || '—'}</span><br><span style="color:var(--info)">Se agregará como #${g.remps.length + 1}: ${esc(S.rech.actual.guia)}</span></span></label>`).join('') : '<span class="small muted">No se encontró esa guía.</span>'; }); }
+function resolver(acc) { gs('resolverRechazo', S.rech.actual.id, acc, S.rech.fila || '').then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { $('rPanel').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div>${esc(r.msg)}</div></div>`; cargarRechazos(); } }); }
+
+// ════════════════════════════════════════════════════════════
+//  INDEMNIZACIONES
+// ════════════════════════════════════════════════════════════
+function filtrosIndem(p) { return { transportadora: $('nTrans').value, estadoGuia: $('nEstadoGuia').value, mes: $('nMes').value, ciudadDestino: $('nCiudad').value, estadoCobro: $('nEstadoCobro').value, bodega: $('nBod').value, pagina: p || 1, porPagina: 50 }; }
+function cargarIndem(p) {
+  S.indem.pagina = p || 1; S.indem.sel.clear(); cargando('nTabla');
+  gs('getPanelIndemnizacion', filtrosIndem(S.indem.pagina)).then(r => {
+    if (!r.ok) return toast(r.msg, 'bad'); S.indem.data = r; const t = r.totales;
+    $('nKpis').innerHTML = `<div class="card kpi hl"><span class="l">Guías generando cobro</span><span class="v">${num(t.enBodega)}</span><span class="s">Recibidas en Bodega Dropi</span></div><div class="card kpi"><span class="l">Valor mensual por guía</span><span class="v">${peso(t.valorMensual)}</span><span class="s">Se cambia en Configuración</span></div><div class="card kpi"><span class="l">Total generado</span><span class="v">${peso(t.valorTotal)}</span><span class="s">${num(t.guias)} guías con cobro</span></div><div class="card kpi bad"><span class="l">Pendiente por cobrar</span><span class="v">${peso(t.pendiente)}</span></div><div class="card kpi ok"><span class="l">Cobrado</span><span class="v">${peso(t.cobrado)}</span><span class="s">Recaudo ${t.tasaRecaudo}%</span></div><div class="card kpi"><span class="l">Más de 3 meses en bodega</span><span class="v">${num(t.alertaGuiasAntiguas)}</span><span class="s">Promedio ${t.promedioMesesPorGuia} meses</span></div>`;
+    $('nTransTbl').innerHTML = r.resumenTransportadoras.length ? `<table class="tbl"><thead><tr><th>Transportadora</th><th>Guías</th><th>Generado</th><th>Pendiente</th><th>Cobrado</th></tr></thead><tbody>${r.resumenTransportadoras.map(x => `<tr><td class="g">${esc(x.transportadora)}</td><td>${num(x.cantidadGuias)}</td><td>${peso(x.valorTotal)}</td><td style="color:var(--bad);font-weight:700">${peso(x.pendiente)}</td><td style="color:var(--ok);font-weight:700">${peso(x.cobrado)}</td></tr>`).join('')}</tbody></table>` : vacio('Aún no hay cobros generados.');
+    $('nGracia').innerHTML = r.enGracia.length ? `<table class="tbl"><thead><tr><th>Guía</th><th>ID bodega</th><th>Transportadora</th><th>Bodega Dropi</th><th>Recibida</th><th>Primer cobro</th></tr></thead><tbody>${r.enGracia.map(x => `<tr><td class="g">${esc(x.guia)}</td><td>${esc(x.idBod)}</td><td>${esc(x.trans)}</td><td>${esc(x.ciudad)}</td><td>${esc(x.fRecFisica)}</td><td>${esc(x.primerCobroDisponible)}</td></tr>`).join('')}</tbody></table>` : vacio('No hay guías en periodo de gracia.');
+    $('nTabla').innerHTML = `<div class="card-h"><h3>Cobros</h3><div class="r small muted">${num(r.totalFilas)} registros</div><div class="r" id="nAcc"></div></div>` + (r.rows.length ? `<div class="tblw" style="max-height:600px;overflow:auto"><table class="tbl"><thead><tr><th><input type="checkbox" aria-label="Seleccionar todos" onchange="document.querySelectorAll('.chkN').forEach(k=>{k.checked=this.checked;selIndem(k)})"></th><th>Guía</th><th>ID bodega</th><th>Transportadora</th><th>Bodega Dropi</th><th>Llegó</th><th>Meses</th><th>Mes cobro</th><th>Valor</th><th>Estado cobro</th><th>Estado guía</th></tr></thead><tbody>${r.rows.map(x => `<tr><td><input type="checkbox" class="chkN" data-c="${x.cobroRowIndex}" data-r="${x.rowNovedades}" onchange="selIndem(this)" aria-label="Seleccionar"></td><td class="g">${esc(x.guia)}</td><td>${esc(x.idBod)}</td><td>${esc(x.trans)}</td><td>${esc(x.ciudad)}</td><td class="muted">${esc(x.fechaLlegadaBodega)}</td><td>${x.mesesEnBodega}</td><td>${esc(x.mes)}</td><td class="g">${peso(x.valor)}</td><td>${badge(x.estadoCobro)}</td><td>${badge(x.estadoRec)}</td></tr>`).join('')}</tbody></table></div>${pagerHTML(r, 'cargarIndem')}` : vacio('No hay cobros con esos filtros.'));
+    graficaIndem(r.evolucionMensual);
+  });
+}
+function selIndem(k) { const c = +k.dataset.c; k.checked ? S.indem.sel.add(c) : S.indem.sel.delete(c); const n = S.indem.sel.size; $('nAcc').innerHTML = n ? `<button class="btn btn-ok btn-sm" onclick="marcarCobro('Cobrado al proveedor')">Marcar ${n} cobrado(s)</button><button class="btn btn-sm" onclick="marcarCobro('Pendiente de cobro')">Volver a pendiente</button><button class="btn btn-sm" onclick="detenerCobro('${EB.RETIRADO}')">Retirado por el proveedor</button><button class="btn btn-sm" onclick="detenerCobro('${EB.REENVIADO}')">Reenviado al proveedor</button>` : ''; }
+function marcarCobro(est) { gs('marcarCobroIndemnizacion', [...S.indem.sel], { estadoCobro: est }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); cargarIndem(S.indem.pagina); }); }
+function detenerCobro(est) { const filas = [...new Set([...document.querySelectorAll('.chkN:checked')].map(k => +k.dataset.r))]; confirmar(est, `Las ${filas.length} guía(s) dejarán de generar cobro desde ahora. ¿Continuar?`, 'Confirmar').then(ok => { if (ok) gs('actualizarEstadoBodega', filas, { estado: est }).then(r => { toast(r.msg, r.ok ? 'ok' : 'warn'); cargarIndem(S.indem.pagina); }); }); }
+function graficaIndem(ev) { if (!window.Chart) return; if (S.charts.i) S.charts.i.destroy(); S.charts.i = new Chart($('chIndem'), { type: 'bar', data: { labels: ev.map(x => x.mes), datasets: [{ label: 'Cobrado', data: ev.map(x => x.cobrado), backgroundColor: '#059669', borderRadius: 6, stack: 's' }, { label: 'Pendiente', data: ev.map(x => x.pendiente), backgroundColor: '#FF7A1A', borderRadius: 6, stack: 's' }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#F1F3F6' } } } } }); }
+function exportarIndem() { gs('exportarIndemnizacionCSV', filtrosIndem(1)).then(r => { if (r.ok) descargarB64(r.fileData, 'Indemnizaciones_' + hoyISO() + '.csv'); }); }
+function sincronizarIndem() { toast('Sincronizando…'); gs('sincronizarTodoIndemnizacion').then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); cargarIndem(1); }); }
+
+// ════════════════════════════════════════════════════════════
+//  CONFIGURACIÓN
+// ════════════════════════════════════════════════════════════
+function cargarConfig() {
+  cargando('uTabla');
+  gs('getConfigGeneral').then(r => {
+    if (!r.ok) return toast(r.msg, 'bad'); S.cfg = r; renderUsuarios();
+    $('cfgBodegas').innerHTML = r.bodegas.map((b, i) => `<div class="card p" style="padding:14px;display:flex;gap:12px;align-items:flex-start"><div style="flex:1"><b>${esc(b.ciudad)}</b> ${b.activa ? '' : '<span class="badge" style="background:#F3F4F6;color:#374151">Inactiva</span>'}<div class="small">${esc(b.direccion || 'Sin dirección: agréguela')}</div><div class="small muted">${esc(b.contacto)} ${esc(b.telefono)}</div></div><button class="btn btn-sm" onclick="editarBodega(${i})">Editar</button></div>`).join('');
+    const desc = { VALOR_COBRO_MENSUAL: 'Valor mensual de indemnización por guía (aplica a los cobros nuevos)', CONTACTO_URGENTE: 'Contacto que ve la bodega cuando una guía NO se debe recibir', LIMITE_WSP_DIA: 'Límite sugerido de WhatsApp por asesor al día', CRM_WEBHOOK_URL: 'URL del CRM para WhatsApp por API (vacío = manual)', MAX_BUSQUEDA: 'Máximo de valores por búsqueda en el buscador' };
+    $('cfgParams').innerHTML = r.parametros.map(p => `<label class="fld">${esc(desc[p.clave] || p.clave)}<div style="display:flex;gap:8px"><input class="inp" id="par_${p.clave}" value="${esc(p.valor)}" style="flex:1"><button class="btn" onclick="guardarParam('${p.clave}')">Guardar</button></div></label>`).join('');
+    $('cfgGeminiTxt').textContent = r.iaConfigurada ? 'La IA está configurada.' : 'Sin API Key: la IA está desactivada.';
+  });
+}
+function renderUsuarios() {
+  const q = ($('uBuscar').value || '').toLowerCase();
+  const rows = S.cfg.usuarios.filter(u => !q || (u.nombre + u.email + u.rol).toLowerCase().indexOf(q) >= 0);
+  $('uTabla').innerHTML = `<table class="tbl"><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Asignación</th><th>Activo</th><th></th></tr></thead><tbody>${rows.map(u => `<tr><td class="g">${esc(u.nombre)}</td><td class="muted">${esc(u.email)}</td><td><span class="badge" style="background:#F3F4F6;color:#374151">${esc(u.rol)}</span></td><td>${esc(u.rol === 'Transportadora' ? u.transportadora : u.rol === 'Bodega Dropi' ? u.sede : u.rol === 'Comercial' ? (u.categorias || 'Todas') : u.rol === 'Gestión' ? 'Todo, menos accesos' : u.rol === 'Admin' ? 'Todo' : 'Solo su panel')}</td><td>${esc(u.activo)}</td><td><button class="btn btn-sm" onclick="editarUsuario(${u.rowIndex})">Editar</button></td></tr>`).join('')}</tbody></table>`;
+}
+function editarUsuario(rowIndex) {
+  const u = rowIndex ? S.cfg.usuarios.find(x => x.rowIndex === rowIndex) : { nombre: '', email: '', rol: 'Gestión', transportadora: '', activo: 'SI', sede: '', categorias: '' };
+  const cats = ['PREMIUM', 'PREMIUM EXCLUSIVO', 'VERIFICADO', 'NO VERIFICADO']; const sel = (u.categorias || '').toUpperCase();
+  abrirModal(`<div class="drawer-h"><h3>${rowIndex ? 'Editar usuario' : 'Nuevo usuario'}</h3></div><div class="drawer-b"><div class="form2"><label class="fld">Nombre<input class="inp" id="u_nombre" value="${esc(u.nombre)}"></label><label class="fld">Correo<input class="inp" id="u_email" value="${esc(u.email)}"></label><label class="fld">Rol<select class="sel" id="u_rol" onchange="rolCampos()">${opciones(S.cfg.roles)}</select></label><label class="fld">Activo<select class="sel" id="u_activo"><option>SI</option><option>NO</option></select></label>
+  <label class="fld" id="u_transW">Transportadora<select class="sel" id="u_trans">${opciones(S.ini.transportadoras, 'Seleccionar…')}</select></label><label class="fld" id="u_sedeW">Bodega Dropi<select class="sel" id="u_sede">${opciones(S.ini.bodegasDropi.map(b => b.ciudad), 'Seleccionar…')}</select></label></div>
+  <div id="u_catW" class="fld" style="margin-top:6px">Categorías que atiende<div class="chips">${cats.map(c => `<label class="chip"><input type="checkbox" class="u_cat" value="${c}" ${sel.indexOf(c) >= 0 && !(c === 'PREMIUM' && sel.replace('PREMIUM EXCLUSIVO', '').indexOf('PREMIUM') < 0) ? 'checked' : ''}> ${c}</label>`).join('')}</div></div>
+  <div class="alert info small" id="u_info"></div></div><div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" onclick="guardarUsuarioUI(${rowIndex || 0})">Guardar</button></div>`);
+  $('u_rol').value = u.rol; $('u_activo').value = u.activo === 'NO' ? 'NO' : 'SI'; $('u_trans').value = u.transportadora; $('u_sede').value = (S.ini.bodegasDropi.find(b => b.clave === normH(u.sede).replace(/ /g, '')) || {}).ciudad || ''; rolCampos();
+}
+function rolCampos() { const r = $('u_rol').value; $('u_transW').classList.toggle('hidden', r !== 'Transportadora'); $('u_sedeW').classList.toggle('hidden', r !== 'Bodega Dropi'); $('u_catW').classList.toggle('hidden', r !== 'Comercial'); $('u_info').innerHTML = { 'Admin': 'Ve y hace todo, incluido dar accesos.', 'Gestión': 'Ve y hace todo, menos dar accesos y configuración.', 'Comercial': 'Solo ve y gestiona las guías que Gestión le pasa, de sus categorías. Puede usar WhatsApp; no envía correos ni reportes.', 'Transportadora': 'Sube novedades, busca soluciones y confirma entregas, solo de su transportadora.', 'Bodega Dropi': 'Solo ve y recibe lo enviado a su ciudad.', 'Indemnizaciones': 'Solo ve el panel de indemnizaciones.' }[r] || ''; }
+function guardarUsuarioUI(rowIndex) { const d = { rowIndex: rowIndex || '', nombre: $('u_nombre').value, email: $('u_email').value, rol: $('u_rol').value, activo: $('u_activo').value, transportadora: $('u_trans').value, sede: $('u_sede').value, categorias: [...document.querySelectorAll('.u_cat:checked')].map(c => c.value).join(', ') }; gs('guardarUsuario', d).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { cerrarCapas(); cargarConfig(); } }); }
+function editarBodega(i) {
+  const b = i === null ? { ciudad: '', direccion: '', contacto: '', telefono: '', activa: true, rowIndex: '' } : S.cfg.bodegas[i];
+  abrirModal(`<div class="drawer-h"><h3>${i === null ? 'Nueva Bodega Dropi' : 'Bodega ' + esc(b.ciudad)}</h3></div><div class="drawer-b"><div class="form2"><label class="fld">Ciudad<input class="inp" id="b_ciudad" value="${esc(b.ciudad)}"></label><label class="fld">Activa<select class="sel" id="b_activa"><option>SI</option><option ${b.activa ? '' : 'selected'}>NO</option></select></label></div><label class="fld">Dirección<input class="inp" id="b_dir" value="${esc(b.direccion)}"></label><div class="form2"><label class="fld">Contacto<input class="inp" id="b_contacto" value="${esc(b.contacto)}"></label><label class="fld">Teléfono<input class="inp" id="b_tel" value="${esc(b.telefono)}"></label></div><span class="small muted">También puede editarlas directo en la pestaña CONFIG_BODEGAS_DROPI de la hoja.</span></div><div class="drawer-f"><button class="btn" onclick="cerrarCapas()">Cancelar</button><button class="btn btn-p" onclick="guardarBodegaUI(${b.rowIndex || 0})">Guardar</button></div>`);
+}
+function guardarBodegaUI(rowIndex) { gs('guardarBodegaDropi', { rowIndex: rowIndex || '', ciudad: $('b_ciudad').value, direccion: $('b_dir').value, contacto: $('b_contacto').value, telefono: $('b_tel').value, activa: $('b_activa').value }).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); if (r.ok) { cerrarCapas(); cargarConfig(); } }); }
+function guardarParam(k) { gs('guardarParametro', k, $('par_' + k).value).then(r => toast(r.msg, r.ok ? 'ok' : 'bad')); }
+function guardarGemini() { gs('guardarGeminiKey', $('cfgGemini').value).then(r => { toast(r.msg, r.ok ? 'ok' : 'bad'); $('cfgGemini').value = ''; }); }
+function repararIndem() { confirmar('Reparar cobros', 'Elimina cobros duplicados y cobros del mes en curso que aún no se cumple. ¿Continuar?', 'Reparar').then(ok => { if (ok) gs('repararIndemnizacion').then(r => toast(r.msg, r.ok ? 'ok' : 'bad')); }); }
+function previaMigracion() {
+  cargando('cfgMigra', 'Analizando la hoja…');
+  gs('previsualizarMigracion').then(r => {
+    if (!r.ok) return toast(r.msg, 'bad');
+    const cambios = Object.entries(r.cambios);
+    $('cfgMigra').innerHTML = `<div class="card p" style="background:#FBFBFC"><div class="list-kv">${cambios.length ? cambios.map(([k, v]) => `<div><span>${esc(k)}</span><b>${num(v)}</b></div>`).join('') : '<div><span>Estados</span><b>Ya están al día</b></div>'}<div><span>Quedan "En tránsito a bodega"</span><b>${num(r.bodegaTransito)}</b></div><div><span>Reingresos por numerar</span><b>${num(r.intentos)}</b></div><div><span>Pestañas nuevas</span><b>${r.hojasNuevas.length ? r.hojasNuevas.map(esc).join(', ') : 'Ninguna'}</b></div><div><span>Total de filas analizadas</span><b>${num(r.total)}</b></div></div></div>`;
+  });
+}
+function aplicarMigracion() {
+  confirmar('Actualizar estructura y estados', 'Primero se hará una copia de seguridad del archivo en tu Drive y luego se aplicarán los cambios. Te recomendamos también hacer tu propia copia. ¿Continuar?', 'Hacer copia y aplicar').then(ok => {
+    if (!ok) return; cargando('cfgMigra', 'Creando copia de seguridad y aplicando… puede tardar un minuto.');
+    gs('ejecutarMigracion').then(r => { if (!r.ok) { $('cfgMigra').innerHTML = `<div class="alert bad"><i class="fas fa-circle-exclamation"></i><div>${esc(r.msg)}</div></div>`; return; } $('cfgMigra').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div><b>${esc(r.msg)}</b><br><a href="${esc(r.backup)}" target="_blank">Abrir la copia de seguridad</a></div></div>`; toast('Actualización completa', 'ok'); cargarConfig(); S.ini.bodegasDropi = S.ini.bodegasDropi; });
+  });
+}
+</script>
+</body>
+</html>
