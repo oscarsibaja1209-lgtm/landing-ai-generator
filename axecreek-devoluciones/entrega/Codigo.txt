@@ -473,7 +473,6 @@ function validarFilasIngreso_(u, payload) {
     const out = { n: n + 1, guia, guiaRemp: txt_(f.guiaRemp), tipoNov: txt_(f.tipoNov), estadoTrans: txt_(f.estadoTrans), obsTrans: txt_(f.obsTrans), cuenta: txt_(f.cuenta), fechaCap: txt_(f.fechaCap), idInter: txt_(f.idInter), bodInter: txt_(f.bodInter) };
     const k = normCode_(guia);
     if (!k) { out.resultado = 'error'; out.motivo = 'Falta el número de guía'; return out; }
-    if (!out.tipoNov) { out.resultado = 'error'; out.motivo = 'Falta el tipo de novedad'; return out; }
     if (vistos[k]) { out.resultado = 'error'; out.motivo = 'Guía repetida en el mismo archivo (fila ' + vistos[k] + ')'; return out; }
     vistos[k] = n + 1;
     if (idx[k]) {

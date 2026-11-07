@@ -303,20 +303,31 @@ iframe.prev{width:100%;height:560px;border:1px solid var(--line);border-radius:1
 <!-- ═════════ INGRESO ═════════ -->
 <section class="tab" id="tab-ingreso">
   <div class="card filters">
-    <label class="fld">Transportadora<select class="sel" id="iTrans" onchange="renderManual()"></select></label>
+    <label class="fld">Transportadora<select class="sel" id="iTrans" onchange="camposMasivo()"></select></label>
     <label class="fld">Fecha de solicitud<input type="date" class="inp" id="iFecha"></label>
     <div class="small muted" style="align-self:center">¿Ya tiene solución? <a href="#" onclick="irTab('buscador');return false">Búsquela antes de subir</a>.</div>
   </div>
   <div class="card">
-    <div class="card-h"><h3><i class="fas fa-keyboard" style="color:var(--brand)"></i> Escribir las guías a mano</h3><div class="r small muted">Una fila por guía · también puede pegar varias celdas desde Excel</div><div class="r"><button class="btn btn-sm" onclick="agregarFilasManual(10)"><i class="fas fa-plus"></i> 10 filas</button><button class="btn btn-sm" onclick="limpiarManual()"><i class="fas fa-eraser"></i> Limpiar</button><button class="btn btn-p btn-sm" onclick="revisarManual()"><i class="fas fa-list-check"></i> Revisar y guardar</button></div></div>
-    <div class="filters" style="border-bottom:1px solid var(--line);background:#FCFCFD">
-      <span class="small" style="font-weight:700;align-self:center">Llenar en todas las filas vacías:</span>
-      <label class="fld">Tipo de novedad<input class="inp" id="mmTipo" style="width:220px"></label>
-      <label class="fld">Estado transportadora<input class="inp" id="mmEstado" style="width:180px"></label>
-      <label class="fld grow">Observación<input class="inp" id="mmObs"></label>
-      <button class="btn" onclick="llenarManual()"><i class="fas fa-fill-drip"></i> Llenar</button>
+    <div class="card-h"><h3><i class="fas fa-layer-group" style="color:var(--brand)"></i> Ingreso masivo · una guía por línea</h3><div class="r small muted">Hasta 2.000 guías. Cada línea de cada campo corresponde a la guía de la misma línea.</div></div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+      <label class="fld">Números de guía * <span class="muted" style="font-weight:500">· una por línea (máx. 2.000)</span><textarea class="inp lin" id="mlGuias" rows="7" placeholder="Ej: 123456789&#10;987654321"></textarea><span class="small cnt" id="cnt_mlGuias"></span></label>
+      <div class="form2">
+        <label class="fld">Guías reemplazatorias <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlRemp" rows="4"></textarea><span class="small cnt" id="cnt_mlRemp"></span></label>
+        <label class="fld">Tipo de novedad <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlTipo" rows="4"></textarea><span class="small cnt" id="cnt_mlTipo"></span></label>
+        <label class="fld">Estado transportadora <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlEstado" rows="4"></textarea><span class="small cnt" id="cnt_mlEstado"></span></label>
+        <label class="fld">Observaciones <span class="muted" style="font-weight:500">· una por línea, o una sola para todas</span><textarea class="inp lin" id="mlObs" rows="4"></textarea><span class="small cnt" id="cnt_mlObs"></span></label>
+      </div>
+      <div class="form2 hidden" id="mlEnvia">
+        <label class="fld">Cuenta (Envía) <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlCuenta" rows="3"></textarea><span class="small cnt" id="cnt_mlCuenta"></span></label>
+        <label class="fld">Fecha captura (Envía) <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlFechaCap" rows="3"></textarea><span class="small cnt" id="cnt_mlFechaCap"></span></label>
+      </div>
+      <div class="form2 hidden" id="mlInter">
+        <label class="fld">ID Interrapidísimo <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlIdInter" rows="3"></textarea><span class="small cnt" id="cnt_mlIdInter"></span></label>
+        <label class="fld">Bodega Interrapidísimo <span class="muted" style="font-weight:500">· una por línea</span><textarea class="inp lin" id="mlBodInter" rows="3"></textarea><span class="small cnt" id="cnt_mlBodInter"></span></label>
+      </div>
+      <div id="mlAviso"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-p" onclick="revisarMasivoLineas()"><i class="fas fa-list-check"></i> Revisar y registrar novedades</button><button class="btn" onclick="limpiarMasivoLineas()"><i class="fas fa-broom"></i> Limpiar formulario</button></div>
     </div>
-    <div class="tblw" style="max-height:480px;overflow:auto"><table class="tbl" id="iManual"></table></div>
   </div>
   <div class="grid g-3">
     <div class="card p" style="display:flex;flex-direction:column;gap:10px">
@@ -559,7 +570,7 @@ const E = { PENDIENTE:'Pendiente', GEST_LOG:'En gestión logística', GEST_COM:'
 const EB = { TRANSITO:'En tránsito a bodega', RECIBIDO:'Recibido en Bodega', RETIRADO:'Retirado por el proveedor', REENVIADO:'Reenviado al proveedor' };
 const COLOR = { [E.PENDIENTE]:['#F3F4F6','#374151','#9CA3AF'], [E.GEST_LOG]:['#EFF6FF','#1E40AF','#2563EB'], [E.GEST_COM]:['#F5F3FF','#5B21B6','#7C3AED'], [E.COM_SIN]:['#FAF5FF','#6B21A8','#A78BFA'], [E.SOL_LISTA]:['#FFFBEB','#92400E','#D97706'], [E.BOD_LISTA]:['#FFF7ED','#9A3412','#F59E0B'], [E.RECH_LISTA]:['#FEF2F2','#991B1B','#F87171'], [E.SOL_NOTIF]:['#ECFEFF','#155E75','#0891B2'], [E.BOD_NOTIF]:['#ECFEFF','#164E63','#0E7490'], [E.RECH_NOTIF]:['#FEF2F2','#7F1D1D','#DC2626'], [E.CULM_ENT]:['#ECFDF5','#065F46','#059669'], [E.CULM_BOD]:['#ECFDF5','#064E3B','#047857'], [EB.TRANSITO]:['#FFF7ED','#9A3412','#F59E0B'], [EB.RECIBIDO]:['#ECFDF5','#065F46','#059669'], [EB.RETIRADO]:['#F3F4F6','#374151','#9CA3AF'], [EB.REENVIADO]:['#F3F4F6','#374151','#9CA3AF'], 'Pendiente de cobro':['#FFF7ED','#9A3412','#F59E0B'], 'Cobrado al proveedor':['#ECFDF5','#065F46','#059669'], 'Por resolver':['#FEF2F2','#991B1B','#DC2626'], 'Vinculada':['#ECFDF5','#065F46','#059669'], 'No recibir':['#F3F4F6','#374151','#9CA3AF'] };
 const TABS = { dashboard:['Dashboard','fa-chart-pie','Visión general'], ingreso:['Ingreso y carga','fa-cloud-arrow-up','Operación'], cruce:['Cruzar Excel Dropi','fa-code-merge','Operación'], buscador:['Buscador de soluciones','fa-magnifying-glass','Operación'], gestion:['Gestión y solución','fa-list-check','Operación'], comercial:['Comercial','fa-handshake','Operación'], whatsapp:['WhatsApp','fa-brands fa-whatsapp','Comunicación'], correos:['Correos a transportadoras','fa-envelope-open-text','Comunicación'], bodega:['Bodega Dropi','fa-warehouse','Bodega'], rechazos:['Guías rechazadas en bodega','fa-triangle-exclamation','Bodega'], indemnizacion:['Indemnizaciones','fa-sack-dollar','Bodega'], config:['Configuración','fa-gear','Administración'] };
-const SUBT = { dashboard:'Métricas en vivo de todas las novedades', ingreso:'Suba las novedades por plantilla, una fila por guía', cruce:'Complete los datos del proveedor con el reporte de Dropi', buscador:'Revise si el proveedor ya tiene una solución antes de subir', gestion:'Por defecto solo se ve lo pendiente, agrupado por bodega del proveedor', comercial:'Guías que Gestión pasó a comercial, según tu categoría', whatsapp:'Un mensaje por proveedor con todas sus guías activas', correos:'Envíe soluciones, envíos a bodega y rechazos', bodega:'Solo se reciben guías notificadas por Dropi para esta bodega', rechazos:'Resuelva guías que llegaron sin estar notificadas', indemnizacion:'Cobro mensual por guía recibida en Bodega Dropi', config:'Usuarios, bodegas, parámetros y mantenimiento' };
+const SUBT = { dashboard:'Métricas en vivo de todas las novedades', ingreso:'Una guía por línea (hasta 2.000) o con plantilla', cruce:'Complete los datos del proveedor con el reporte de Dropi', buscador:'Revise si el proveedor ya tiene una solución antes de subir', gestion:'Por defecto solo se ve lo pendiente, agrupado por bodega del proveedor', comercial:'Guías que Gestión pasó a comercial, según tu categoría', whatsapp:'Un mensaje por proveedor con todas sus guías activas', correos:'Envíe soluciones, envíos a bodega y rechazos', bodega:'Solo se reciben guías notificadas por Dropi para esta bodega', rechazos:'Resuelva guías que llegaron sin estar notificadas', indemnizacion:'Cobro mensual por guía recibida en Bodega Dropi', config:'Usuarios, bodegas, parámetros y mantenimiento' };
 const S = { u:null, ini:null, tab:'', charts:{}, gest:{ pagina:1, bandeja:null, data:null, sel:new Set() }, bod:{ indice:new Map(), cola:[], feed:[], pagina:1, sel:new Set() }, indem:{ pagina:1, sel:new Set() }, cfg:null, rech:{ estado:'Por resolver', rows:[] }, wsp:{ data:null, actual:null } };
 
 const $ = id => document.getElementById(id);
@@ -707,7 +718,7 @@ function irTab(t) {
 }
 function recargarTab() {
   const t = S.tab;
-  ({ dashboard: () => { cargarDash(); cargarRendimiento(); }, gestion: () => cargarGestion(S.gest.pagina || 1), comercial: () => cargarComercial(1), whatsapp: cargarWsp, correos: initCorreos, bodega: () => cargarBodega(S.bod.pagina || 1), rechazos: cargarRechazos, indemnizacion: () => cargarIndem(1), config: cargarConfig, buscador: initBuscador, ingreso: renderManual, cruce: () => {} }[t] || (() => {}))();
+  ({ dashboard: () => { cargarDash(); cargarRendimiento(); }, gestion: () => cargarGestion(S.gest.pagina || 1), comercial: () => cargarComercial(1), whatsapp: cargarWsp, correos: initCorreos, bodega: () => cargarBodega(S.bod.pagina || 1), rechazos: cargarRechazos, indemnizacion: () => cargarIndem(1), config: cargarConfig, buscador: initBuscador, ingreso: camposMasivo, cruce: () => {} }[t] || (() => {}))();
   if (staff() && t !== 'rechazos') gs('getRechazosBodega', { estado: 'Por resolver' }).then(r => { const c = $('cntRech'); if (c && r.ok) { c.textContent = r.porResolver; c.classList.toggle('hidden', !r.porResolver); } }).catch(() => {});
 }
 
@@ -769,33 +780,34 @@ async function descargarPlantilla() {
   const cols = colsPlantilla(tr);
   await libroExcel('Plantilla_Novedades_' + tr.replace(/\s+/g, '_'), 'Novedades', cols, [], { texto: cols.map((c, i) => i), filasVacias: 2000, nota: 'Una fila por guía. GUIA y TIPO NOVEDAD son obligatorios.' });
 }
-S.manual = [];
-const ING_KEY = Object.fromEntries(ING_COLS.map(c => [c[0], c[1]]));
-const ING_TIT = { GUIA: 'Guía *', 'GUIA REEMPLAZATORIA': 'Guía reemplazatoria', 'TIPO NOVEDAD': 'Tipo de novedad *', 'ESTADO TRANSPORTADORA': 'Estado transportadora', OBSERVACIONES: 'Observaciones', CUENTA: 'Cuenta', 'FECHA CAPTURA': 'Fecha captura', 'ID INTERRAPIDISIMO': 'ID Interrapidísimo', 'BODEGA INTERRAPIDISIMO': 'Bodega Interrapidísimo' };
-function colsManual() { return colsPlantilla($('iTrans').value || '').map(c => ING_KEY[c]); }
-function renderManual() {
-  if (!S.manual.length) agregarFilasManual(10, true);
-  const cols = colsPlantilla($('iTrans').value || '');
-  $('iManual').innerHTML = `<thead><tr><th>#</th>${cols.map(c => `<th>${esc(ING_TIT[c] || c)}</th>`).join('')}<th></th></tr></thead><tbody>${S.manual.map((f, r) => `<tr><td class="muted">${r + 1}</td>${cols.map((c, k) => `<td style="padding:4px 6px"><input class="inp mi" style="height:34px;min-width:${k < 2 ? 150 : 140}px" data-r="${r}" data-k="${ING_KEY[c]}" value="${esc(f[ING_KEY[c]] || '')}"></td>`).join('')}<td><button class="btn btn-sm btn-ic" aria-label="Quitar fila" onclick="S.manual.splice(${r},1);renderManual()"><i class="fas fa-xmark"></i></button></td></tr>`).join('')}</tbody>`;
+const ML = [['mlGuias', 'guia'], ['mlRemp', 'guiaRemp'], ['mlTipo', 'tipoNov'], ['mlEstado', 'estadoTrans'], ['mlObs', 'obsTrans'], ['mlCuenta', 'cuenta'], ['mlFechaCap', 'fechaCap'], ['mlIdInter', 'idInter'], ['mlBodInter', 'bodInter']];
+// Cada línea cuenta, incluso vacía, para que la línea N de cada campo sea la guía N. Solo se ignora el salto final.
+function lineas(id) { const t = $(id).value.replace(/\r/g, ''); if (!t.trim()) return []; return t.replace(/\n+$/, '').split('\n').map(x => x.trim()); }
+function camposMasivo() { const n = normH($('iTrans').value); $('mlEnvia').classList.toggle('hidden', n !== 'ENVIA'); $('mlInter').classList.toggle('hidden', n !== 'INTERRAPIDISIMO'); contarLineas(); }
+function contarLineas() {
+  const n = lineas('mlGuias').length; let mal = 0;
+  ML.forEach(([id, k]) => { const c = $('cnt_' + id); if (!c) return; const L = lineas(id).length;
+    if (id === 'mlGuias') { c.textContent = num(L) + ' guía(s)' + (L > 2000 ? ' · máximo 2.000' : ''); c.style.color = L > 2000 ? 'var(--bad)' : 'var(--muted)'; if (L > 2000) mal++; return; }
+    const okL = !L || L === n || (k === 'obsTrans' && L === 1);
+    c.textContent = !L ? 'Vacío' : (k === 'obsTrans' && L === 1 && n > 1 ? 'Una sola: se usa para las ' + num(n) + ' guías' : num(L) + ' línea(s)' + (okL ? ' ✓' : ' · deben ser ' + num(n)));
+    c.style.color = okL ? 'var(--muted)' : 'var(--bad)'; if (!okL) mal++; });
+  return mal;
 }
-function agregarFilasManual(n, sinPintar) { for (let i = 0; i < n; i++) S.manual.push({}); if (!sinPintar) renderManual(); }
-function limpiarManual() { S.manual = []; renderManual(); }
-function llenarManual() { const v = { tipoNov: $('mmTipo').value.trim(), estadoTrans: $('mmEstado').value.trim(), obsTrans: $('mmObs').value.trim() }; S.manual.forEach(f => { if (!String(f.guia || '').trim()) return; Object.keys(v).forEach(k => { if (v[k] && !String(f[k] || '').trim()) f[k] = v[k]; }); }); renderManual(); }
-function revisarManual() {
+document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('lin')) contarLineas(); });
+function limpiarMasivoLineas() { ML.forEach(([id]) => $(id).value = ''); $('mlAviso').innerHTML = ''; contarLineas(); }
+function revisarMasivoLineas() {
   if (!$('iTrans').value) return toast('Primero elige la transportadora', 'warn');
-  const filas = S.manual.filter(f => String(f.guia || '').trim()).map(f => Object.assign({}, f));
-  if (!filas.length) return toast('Escribe al menos una guía', 'warn');
+  const g = lineas('mlGuias'); if (!g.length) return toast('Escribe al menos un número de guía', 'warn');
+  if (g.length > 2000) return toast('Máximo 2.000 guías por carga', 'warn');
+  const malos = [];
+  ML.forEach(([id, k]) => { if (id === 'mlGuias' || $(id).closest('.hidden')) return; const L = lineas(id).length; if (L && L !== g.length && !(k === 'obsTrans' && L === 1)) malos.push($(id).closest('label').childNodes[0].textContent.trim() + ': ' + L + ' líneas'); });
+  if (malos.length) { $('mlAviso').innerHTML = `<div class="alert bad"><i class="fas fa-circle-exclamation"></i><div><b>Las líneas no coinciden con las ${num(g.length)} guías.</b> No se guardó nada para que ningún dato quede en la guía equivocada.<br>${malos.map(esc).join('<br>')}</div></div>`; return; }
+  $('mlAviso').innerHTML = '';
+  const datos = {}; ML.forEach(([id, k]) => { datos[k] = $(id).closest('.hidden') ? [] : lineas(id); });
+  const filas = g.map((guia, i) => { const f = { guia }; ML.forEach(([id, k]) => { if (k === 'guia') return; const arr = datos[k]; f[k] = !arr.length ? '' : (arr.length === 1 && k === 'obsTrans' ? arr[0] : (arr[i] || '')); }); return f; })
+    .filter(f => f.guia);
   validarIngresoUI(filas);
 }
-document.addEventListener('input', e => { const t = e.target; if (t.classList && t.classList.contains('mi')) { S.manual[+t.dataset.r][t.dataset.k] = t.value; } });
-document.addEventListener('paste', e => {
-  const t = e.target; if (!t.classList || !t.classList.contains('mi')) return;
-  const txt = (e.clipboardData || window.clipboardData).getData('text'); if (!/[\t\n]/.test(txt.trim())) return;
-  e.preventDefault();
-  const cols = colsManual(), r0 = +t.dataset.r, k0 = cols.indexOf(t.dataset.k);
-  txt.replace(/\r/g, '').replace(/\n$/, '').split('\n').forEach((linea, i) => { while (S.manual.length <= r0 + i) S.manual.push({}); linea.split('\t').forEach((v, j) => { const k = cols[k0 + j]; if (k) S.manual[r0 + i][k] = v.trim(); }); });
-  renderManual(); toast('Celdas pegadas', 'ok');
-});
 function filasDesdeMatriz(m) {
   const hi = m.findIndex(r => r.some(c => normH(c) === 'GUIA'));
   if (hi < 0) throw new Error('No encontré la columna GUIA. Use la plantilla.');
@@ -831,7 +843,7 @@ function guardarIngreso() {
   gs('ingresarNovedades', { transportadora: $('iTrans').value, fechaSolicitud: $('iFecha').value, filas: S.ingreso, reingresar: reing }).then(r => {
     btnCargando(b, false);
     if (!r.ok) return toast(r.msg, 'bad');
-    toast(r.msg, 'ok'); $('iRevision').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div><b>${esc(r.msg)}</b> Quedaron en estado Pendiente.</div></div>`; $('iPegar').value = '';
+    toast(r.msg, 'ok'); limpiarMasivoLineas(); $('iRevision').innerHTML = `<div class="alert ok"><i class="fas fa-circle-check"></i><div><b>${esc(r.msg)}</b> Quedaron en estado Pendiente.</div></div>`; $('iPegar').value = '';
   }).catch(() => btnCargando(b, false));
 }
 

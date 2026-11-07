@@ -228,7 +228,7 @@ titulo('11. Ingreso por plantilla (sin datos corridos) y reingresos');
 const existente = String(NOV()[3][C.GUIA]);
 const v = run('validarIngreso', { transportadora: 'Coordinadora', filas: [
   { guia: '0123456789012', tipoNov: 'DIRECCIÓN ERRADA', obsTrans: 'obs 1' },
-  { guia: '0123456789013', tipoNov: '' },
+  { guia: '', tipoNov: 'X' },
   { guia: '0123456789012', tipoNov: 'X' },
   { guia: existente, tipoNov: 'SE NEGÓ A RECIBIR' },
   { guia: '0123456789014', tipoNov: 'NO SE UBICA', obsTrans: 'obs 3', guiaRemp: '0999' }
